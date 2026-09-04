@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlueCore — network access, identity and policy</title>
+<meta name="description" content="BlueCore designs and validates network access control: Cisco ISE, RADIUS, 802.1X, EAP-TLS and MAB. Johannesburg, South Africa.">
+<meta name="theme-color" content="#020610">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta property="og:title" content="BlueCore">
+<meta property="og:description" content="Network access, identity and policy. Cisco ISE, RADIUS, 802.1X, EAP-TLS and MAB — designed, tested, documented.">
+<meta property="og:url" content="https://bluecore.joburg/">
+<meta property="og:type" content="website">
+<style>
+  :root {
+    --bg: #020610;
+    --blue: #2b6bff;
+    --blue-bright: #4da3ff;
+    --blue-dim: #123a8a;
+    --blue-faint: #0a1f4d;
+    --text: #dff0ff;
+    --text-dim: #8fb4e8;
+    --muted: #5b7fc4;
+    --panel: rgba(2, 6, 16, 0.78);
+    --mono: 'Courier New', Courier, 'Lucida Console', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  a { color: var(--blue-bright); }
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 3px;
+  }
+
+  /* ---------- Rain canvas + scanlines ---------- */
+  #rain {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    display: block;
+  }
+  .scanlines {
+    position: fixed;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background: linear-gradient(rgba(0,0,0,0) 50%, rgba(0,0,0,0.22) 50%);
+    background-size: 100% 4px;
+    opacity: 0.35;
+  }
+
+  /* ---------- Page content sits above the rain ---------- */
+  main { position: relative; z-index: 2; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem 1.25rem 4rem;
+    background: radial-gradient(ellipse 60% 55% at 50% 50%, rgba(2,6,16,0.92) 0%, rgba(2,6,16,0.55) 55%, rgba(2,6,16,0) 100%);
+  }
+  .wordmark {
+    font-size: clamp(2.6rem, 11vw, 8.5rem);
+    font-weight: bold;
+    letter-spacing: 0.28em;
+    margin-left: 0.28em; /* visually recentre the tracked-out text */
+    color: var(--blue-bright);
+    text-shadow: 0 0 10px var(--blue-bright), 0 0 22px var(--blue), 0 0 48px var(--blue-dim);
+    animation: flicker 4s infinite;
+    line-height: 1.1;
+  }
+  .tagline {
+    margin-top: 1.4rem;
+    font-size: clamp(0.8rem, 2.6vw, 1.3rem);
+    letter-spacing: clamp(0.12em, 1.4vw, 0.45em);
+    margin-left: clamp(0.12em, 1.4vw, 0.45em);
+    color: var(--text);
+    text-shadow: 0 0 8px var(--blue);
+    min-height: 1.6em;
+    white-space: normal;
+  }
+  .cursor {
+    display: inline-block;
+    width: 0.6em;
+    height: 1em;
+    vertical-align: -0.15em;
+    background: var(--blue-bright);
+    margin-left: 0.15em;
+    box-shadow: 0 0 10px var(--blue-bright);
+    animation: blink 1s step-end infinite;
+  }
+  .hero-sub {
+    margin-top: 2.2rem;
+    max-width: 34rem;
+    color: var(--text-dim);
+    font-size: clamp(0.85rem, 2vw, 1rem);
+    text-shadow: 0 0 6px rgba(2,6,16,1);
+  }
+  .scroll-hint {
+    position: absolute;
+    bottom: 1.6rem;
+    left: 0; right: 0;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    text-decoration: none;
+  }
+  .hero { position: relative; }
+
+  /* ---------- Sections ---------- */
+  .section {
+    max-width: 66rem;
+    margin: 0 auto;
+    padding: 4rem 1.25rem;
+  }
+  .section h2 {
+    font-size: clamp(1.1rem, 2.4vw, 1.5rem);
+    font-weight: bold;
+    letter-spacing: 0.12em;
+    color: var(--blue-bright);
+    text-shadow: 0 0 10px var(--blue);
+    margin-bottom: 1.4rem;
+  }
+  .section h2::before {
+    content: '> ';
+    color: var(--blue);
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--blue-dim);
+    box-shadow: 0 0 18px rgba(43,107,255,0.18), inset 0 0 40px rgba(43,107,255,0.05);
+    padding: 1.6rem 1.8rem;
+    backdrop-filter: blur(2px);
+  }
+  .intro p {
+    max-width: 62ch;
+    font-size: clamp(0.95rem, 2vw, 1.08rem);
+  }
+  .intro p + p { margin-top: 1rem; }
+
+  /* ---------- Services grid ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+  }
+  @media (max-width: 860px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--blue-dim);
+    padding: 1.3rem 1.4rem 1.5rem;
+    box-shadow: 0 0 14px rgba(43,107,255,0.12);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .card h3 {
+    font-size: 1rem;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    text-shadow: 0 0 8px var(--blue);
+  }
+  .card h3::before {
+    content: '> ';
+    color: var(--blue-bright);
+  }
+  .card p {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+
+  /* ---------- Footer ---------- */
+  footer {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 2.5rem 1.25rem 3rem;
+    color: var(--muted);
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    background: linear-gradient(rgba(2,6,16,0) 0%, rgba(2,6,16,0.9) 60%);
+  }
+
+  @keyframes flicker {
+    0%,19%,21%,23%,25%,54%,56%,100% { opacity: 1; }
+    20%,24%,55% { opacity: 0.6; }
+  }
+  @keyframes blink {
+    0%,50% { opacity: 1; }
+    50.01%,100% { opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wordmark, .cursor { animation: none; }
+  }
+</style>
+</head>
+<body>
+  <canvas id="rain" aria-hidden="true"></canvas>
+
+  <main>
+    <section class="hero">
+      <h1 class="wordmark">BLUECORE</h1>
+      <p class="tagline"><span id="typed"></span><span class="cursor" aria-hidden="true"></span></p>
+      <p class="hero-sub">Who gets onto the network, how they prove it, and what policy they land in.</p>
+      <a class="scroll-hint" href="#what-we-do" aria-label="Scroll to what we do">▼</a>
+    </section>
+
+    <section class="section intro" id="what-we-do">
+      <h2>What we do</h2>
+      <div class="panel">
+        <p>BlueCore designs and validates network access control. We work out who and what is allowed onto a network, how each device proves who it is, and which policy it lands in once it is authenticated.</p>
+        <p>The tools are Cisco ISE, RADIUS, 802.1X, EAP-TLS and MAB. Every design is built in a lab, tested against real authentication flows, and documented so the evidence stands up when someone asks why it works.</p>
+      </div>
+    </section>
+
+    <section class="section" id="services">
+      <h2>Services</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>ISE design and deployment</h3>
+          <p>Policy sets, identity sources, certificate profiles and authorisation results laid out before anything is clicked, then built and verified.</p>
+        </article>
+        <article class="card">
+          <h3>ISE health check and audit</h3>
+          <p>Read-only review of a running deployment: version and support status, policy sprawl, certificate expiry, node health and what the logs say.</p>
+        </article>
+        <article class="card">
+          <h3>802.1X and EAP-TLS rollout</h3>
+          <p>Machine and user certificates, PKI integration, OCSP and CRL checking, and a wired and wireless rollout order that does not lock anyone out.</p>
+        </article>
+        <article class="card">
+          <h3>MAB and IoT onboarding</h3>
+          <p>Getting printers, cameras, controllers and other devices that cannot do certificates onto the network with the least privilege that still works.</p>
+        </article>
+        <article class="card">
+          <h3>Vendor-neutral RADIUS policy</h3>
+          <p>A policy model written once in plain roles, then mapped onto Cisco ISE, Aruba ClearPass or Huawei so the same design ports between platforms.</p>
+        </article>
+        <article class="card">
+          <h3>Troubleshooting and migration</h3>
+          <p>Failed authentications traced end to end, and controlled moves between policy servers or versions with a rollback path at every step.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    BlueCore, Johannesburg. 2026.
+  </footer>
+
+  <div class="scanlines" aria-hidden="true"></div>
+
+<script>
+/* ---------- Digital rain, blue edition ---------- */
+(function () {
+  const canvas = document.getElementById('rain');
+  const ctx = canvas.getContext('2d');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF:・=+*<>¦'.split('');
+  const WORDS = ['BLUECORE', 'RADIUS', '802.1X', 'EAP-TLS', 'MAB', 'ISE', 'IDENTITY', 'POLICY', 'ACCESS GRANTED', 'AUTHENTICATED'];
+
+  const fontSize = 16;
+  let columns, drops, wordCol, timer = null;
+
+  function setup() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    columns = Math.floor(canvas.width / fontSize) + 1;
+    drops = Array.from({ length: columns }, () => Math.random() * -canvas.height / fontSize);
+    wordCol = Array.from({ length: columns }, () => null);
+    ctx.fillStyle = '#020610';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function maybeSeedWord(i) {
+    if (!wordCol[i] && Math.random() > 0.997) {
+      const w = WORDS[Math.floor(Math.random() * WORDS.length)].replace(/ /g, '');
+      wordCol[i] = { text: w, index: 0 };
+    }
+  }
+
+  function draw() {
+    ctx.fillStyle = 'rgba(2, 6, 16, 0.07)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = fontSize + "px 'Courier New', monospace";
+
+    for (let i = 0; i < drops.length; i++) {
+      maybeSeedWord(i);
+
+      let char, isWord = false;
+      if (wordCol[i]) {
+        char = wordCol[i].text[wordCol[i].index++];
+        isWord = true;
+        if (wordCol[i].index >= wordCol[i].text.length) wordCol[i] = null;
+      } else {
+        char = chars[Math.floor(Math.random() * chars.length)];
+      }
+
+      const x = i * fontSize;
+      const y = drops[i] * fontSize;
+
+      if (isWord) {
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#4da3ff';
+        ctx.shadowBlur = 14;
+      } else if (Math.random() > 0.975) {
+        ctx.fillStyle = '#dff0ff';
+        ctx.shadowColor = '#4da3ff';
+        ctx.shadowBlur = 8;
+      } else {
+        ctx.fillStyle = '#2b6bff';
+        ctx.shadowBlur = 0;
+      }
+
+      ctx.fillText(char, x, y);
+      ctx.shadowBlur = 0;
+
+      if (y > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+  }
+
+  function start() {
+    if (timer || reduceMotion) return;
+    timer = setInterval(draw, 40);
+  }
+  function stop() {
+    if (timer) { clearInterval(timer); timer = null; }
+  }
+
+  setup();
+  if (reduceMotion) {
+    // One static frame: run the simulation forward a few hundred ticks without animating.
+    for (let k = 0; k < 400; k++) draw();
+  } else {
+    start();
+  }
+
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { setup(); if (reduceMotion) for (let k = 0; k < 400; k++) draw(); }, 150);
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stop(); else start();
+  });
+})();
+
+/* ---------- Typed tagline ---------- */
+(function () {
+  const el = document.getElementById('typed');
+  const text = 'NETWORK ACCESS. IDENTITY. POLICY.';
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    el.textContent = text;
+    return;
+  }
+  let i = 0;
+  const t = setInterval(() => {
+    el.textContent = text.slice(0, ++i);
+    if (i >= text.length) clearInterval(t);
+  }, 55);
+})();
+</script>
+</body>
+</html>
