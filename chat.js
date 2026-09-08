@@ -5,7 +5,7 @@
  * stays hidden, so the page can be published before the tunnel is live. */
 (function () {
   const CHAT_ENDPOINT = 'https://bluecore-chat.tailab0ebc.ts.net';
-  const TURNSTILE_SITEKEY = '';           // Cloudflare Turnstile site key; empty = no challenge
+  const TURNSTILE_SITEKEY = '0x4AAAAAAEtAcasVDfJqcVl5';           // Cloudflare Turnstile site key; empty = no challenge
   const MAX_TURNS = 12;
 
   if (CHAT_ENDPOINT.includes('TAILNET')) return;
