@@ -192,6 +192,88 @@
     line-height: 1.55;
   }
 
+  /* ---------- Threat pulse ---------- */
+  #threat-pulse[hidden] { display: none; }
+  .pulse-intro {
+    max-width: 62ch;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-bottom: 1.4rem;
+  }
+  /* .card .x outranks the generic .card p rule above */
+  .card .stat {
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+    font-weight: bold;
+    color: var(--blue-bright);
+    text-shadow: 0 0 12px var(--blue);
+    line-height: 1;
+    margin: 0.2rem 0;
+  }
+  .card .stat-sub { color: var(--text-dim); font-size: 0.8rem; }
+  .card .card-note { color: var(--muted); font-size: 0.78rem; }
+  .kv {
+    list-style: none;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    margin-top: 0.2rem;
+  }
+  .kv li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.3rem 0;
+    border-bottom: 1px dotted var(--blue-faint);
+  }
+  .kv li:last-child { border-bottom: 0; }
+  .kv .kv-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .kv .kv-count { color: var(--blue-bright); flex: none; }
+  .pulse-newest { margin-top: 1.2rem; }
+  .pulse-newest h3 {
+    font-size: 1rem;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    text-shadow: 0 0 8px var(--blue);
+    margin-bottom: 0.8rem;
+  }
+  .pulse-newest h3::before {
+    content: '> ';
+    color: var(--blue-bright);
+  }
+  .pulse-scroll { overflow-x: auto; max-width: 100%; }
+  .pulse-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .pulse-table th {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    font-size: 0.7rem;
+    font-weight: normal;
+    padding: 0.4rem 0.6rem;
+    border-bottom: 1px solid var(--blue-dim);
+  }
+  .pulse-table td {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    padding: 0.4rem 0.6rem;
+    border-bottom: 1px solid var(--blue-faint);
+  }
+  .pulse-table td:first-child { color: var(--text); }
+  .pulse-meta {
+    margin-top: 1rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  .pulse-meta a { color: var(--text-dim); }
+  @media (max-width: 560px) {
+    .card .stat { font-size: 1.7rem; }
+    .pulse-table th, .pulse-table td { padding: 0.3rem 0.4rem; }
+    .pulse-newest { padding: 1.2rem 1rem; }
+  }
+
   /* ---------- Footer ---------- */
   footer {
     position: relative;
@@ -265,6 +347,41 @@
         </article>
       </div>
     </section>
+
+    <section class="section" id="threat-pulse" hidden aria-live="polite">
+      <h2>Threat pulse</h2>
+      <p class="pulse-intro">Live from BlueCore's lab threat-intel service. Indicators are defanged.</p>
+      <div class="grid">
+        <article class="card" id="tp-feodo">
+          <h3>Botnet C2 servers</h3>
+          <p class="stat" data-f="feodo.total">—</p>
+          <p class="stat-sub">tracked, last 30 days · <span data-f="feodo.online">—</span> online</p>
+          <ul class="kv" data-list="feodo.by_malware"></ul>
+        </article>
+        <article class="card" id="tp-threatfox">
+          <h3>ThreatFox IOCs</h3>
+          <p class="stat" data-f="threatfox.total">—</p>
+          <p class="stat-sub" id="tp-threatfox-sub">reported, last 24 h</p>
+          <ul class="kv" data-list="threatfox.by_malware"></ul>
+        </article>
+        <article class="card" id="tp-tor">
+          <h3>Tor exit nodes</h3>
+          <p class="stat" data-f="torexit.total">—</p>
+          <p class="stat-sub">currently listed</p>
+          <p class="card-note">Exit nodes are not malicious by themselves; they are context for access decisions.</p>
+        </article>
+      </div>
+      <div class="panel pulse-newest" id="tp-newest">
+        <h3>Newest C2 servers</h3>
+        <div class="pulse-scroll">
+          <table class="pulse-table">
+            <thead><tr><th>IP</th><th>Family</th><th>Country</th><th>First seen</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <p class="pulse-meta">updated <span id="tp-updated">—</span> · data: <a href="https://feodotracker.abuse.ch/" rel="noopener">abuse.ch Feodo Tracker</a> and <a href="https://threatfox.abuse.ch/" rel="noopener">ThreatFox</a> (CC0), <a href="https://check.torproject.org/exit-addresses" rel="noopener">Tor Project</a></p>
+    </section>
   </main>
 
   <footer>
@@ -281,7 +398,7 @@
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF:・=+*<>¦'.split('');
-  const WORDS = ['BLUECORE', 'RADIUS', '802.1X', 'EAP-TLS', 'MAB', 'ISE', 'IDENTITY', 'POLICY', 'ACCESS GRANTED', 'AUTHENTICATED'];
+  const WORDS = ['BLUECORE', 'RADIUS', '802.1X', 'EAP-TLS', 'MAB', 'ISE', 'IDENTITY', 'POLICY', 'ACCESS GRANTED', 'AUTHENTICATED', 'THREATFOX', 'C2'];
 
   const fontSize = 16;
   let columns, drops, wordCol, timer = null;
@@ -386,5 +503,6 @@
 })();
 </script>
 <script src="chat.js" defer></script>
+<script src="intel.js" defer></script>
 </body>
 </html>
