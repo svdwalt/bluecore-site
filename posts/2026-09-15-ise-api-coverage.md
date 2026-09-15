@@ -3,6 +3,7 @@ title: How much of Cisco ISE 3.5 can you actually automate through the API?
 date: 2026-09-15
 summary: We built an 802.1X and MAB policy on ISE 3.5 API-first and measured where the API stops. More of it is reachable than we expected, and the gaps are not where the documentation suggests.
 draft: false
+cover: /assets/blog/ise-api-cover.svg
 ---
 
 Every policy we build in the BlueCore lab starts life as a design document and ends up as configuration on a policy server. On Cisco ISE the rule is simple: use the REST APIs by default, and drive the web interface with a browser-automation script only where the API genuinely cannot do the job. That keeps a build repeatable and lets the configuration live in version control next to the design.
