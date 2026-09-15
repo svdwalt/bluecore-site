@@ -111,6 +111,10 @@ The whole lab is three virtual machines:
 | Services host | Certificate authority, OCSP responder, CRL web server, DNS, NTP |
 | Test host | `eapol_test` for 802.1X, `radclient` for MAB, `tcpdump` for captures |
 
+How the pieces talk to each other, using one test as the example (tap the diagram to open it full size):
+
+[![Diagram of the lab: the test host sends RADIUS to Cisco ISE as if it were a switch, ISE asks the OCSP responder on the services host whether the certificate is revoked, then answers the test host with Accept plus VLAN or Reject. Dashed setup flows: certificates copied from the services host to the test host, test cases synced from the workstation, and ISE configuration built and captured over the API.](/assets/blog/eap-tls-lab.svg)](/assets/blog/eap-tls-lab.svg)
+
 No switch, no access point, no endpoints. What this tests is the policy server's decisions. What it deliberately does not test is switch behaviour: port control, downloadable ACL enforcement and change of authorisation are out of scope.
 
 ### A certificate authority with openssl

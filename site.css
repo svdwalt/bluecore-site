@@ -403,6 +403,13 @@ body.blog {
 .prose blockquote > * + * { margin-top: 0.8rem; }
 .prose hr { border: 0; border-top: 1px dashed var(--blue-dim); margin: 2.4rem 0; }
 .prose img { max-width: 100%; height: auto; border: 1px solid var(--blue-dim); }
+/* A paragraph holding only a diagram breaks out of the reading column on wide screens. */
+.prose p:has(> img:only-child), .prose p:has(> a:only-child > img) {
+  width: min(64rem, calc(100vw - 2.5rem));
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+.prose p:has(> img:only-child) img, .prose p:has(> a:only-child > img) img { display: block; width: 100%; }
 .table-wrap { overflow-x: auto; }
 .prose table { border-collapse: collapse; width: 100%; font-size: 0.85rem; line-height: 1.5; }
 .prose th {

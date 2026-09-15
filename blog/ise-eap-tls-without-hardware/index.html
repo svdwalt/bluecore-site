@@ -25,7 +25,7 @@
     <article>
       <header class="blog-head">
         <h1>EAP-TLS on Cisco ISE 3.5: what the defaults let through, and how we proved it without a single switch</h1>
-        <p class="post-meta"><time datetime="2026-09-15">15 Sep 2026</time> · 14 min read</p>
+        <p class="post-meta"><time datetime="2026-09-15">15 Sep 2026</time> · 15 min read</p>
       </header>
       <div class="prose">
 <p>EAP-TLS has a reputation as the strong option for network access: every device proves who it is with a certificate, and nobody types a password. That reputation assumes the policy server checks what you think it checks. On Cisco ISE 3.5 several of those checks are off by default, or are not done at all, and nothing on screen tells you.</p>
@@ -73,6 +73,8 @@ IdentityGroup: Name                          EQUALS  &lt;registered OT devices&g
 <p>The key idea is simple. <strong>ISE cannot tell whether a RADIUS request came from a switch or from a script.</strong> It sees an Access-Request from an IP address registered as a network device, signed with the right shared secret. So we registered a Linux test VM as that network device and had it speak RADIUS directly.</p>
 <p>The whole lab is three virtual machines:</p>
 <div class="table-wrap"><table><thead><tr><th>VM</th><th>Role</th></tr></thead><tbody><tr><td>Policy server</td><td>ISE 3.5, the device under test</td></tr><tr><td>Services host</td><td>Certificate authority, OCSP responder, CRL web server, DNS, NTP</td></tr><tr><td>Test host</td><td><code>eapol_test</code> for 802.1X, <code>radclient</code> for MAB, <code>tcpdump</code> for captures</td></tr></tbody></table></div>
+<p>How the pieces talk to each other, using one test as the example (tap the diagram to open it full size):</p>
+<p><a href="/assets/blog/eap-tls-lab.svg"><img src="/assets/blog/eap-tls-lab.svg" alt="Diagram of the lab: the test host sends RADIUS to Cisco ISE as if it were a switch, ISE asks the OCSP responder on the services host whether the certificate is revoked, then answers the test host with Accept plus VLAN or Reject. Dashed setup flows: certificates copied from the services host to the test host, test cases synced from the workstation, and ISE configuration built and captured over the API." loading="lazy"></a></p>
 <p>No switch, no access point, no endpoints. What this tests is the policy server&#x27;s decisions. What it deliberately does not test is switch behaviour: port control, downloadable ACL enforcement and change of authorisation are out of scope.</p>
 <h3 id="a-certificate-authority-with-openssl">A certificate authority with openssl</h3>
 <p>A two-tier PKI: a root CA, and an issuing CA signed by it with <code>pathlen:0</code> so it cannot sign further CAs. The issuing CA also signs a dedicated OCSP responder certificate with the <code>OCSPSigning</code> usage.</p>
