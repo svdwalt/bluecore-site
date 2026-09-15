@@ -11,6 +11,7 @@ Post file: posts/YYYY-MM-DD-some-slug.md, starting with front matter:
     date: 2026-09-15
     summary: One sentence for lists, the feed and the meta description.
     draft: true            # optional; true keeps the post off the public site
+    cover: /assets/blog/some-cover.svg   # optional; shown above the post, see cover_image()
     ---
 
 blog/ is generated in full on every run. Never edit it by hand.
@@ -245,6 +246,7 @@ def parse_post(path):
     draft = meta.get('draft', 'false').lower()
     if draft not in ('true', 'false'):
         raise BuildError('%s: draft must be true or false' % path.name)
+    cover, share_image = cover_image(path.name, meta.get('cover', ''))
     body = raw.replace('\r\n', '\n')[fm.end():]
     try:
         body_html = markdown(body)
@@ -260,7 +262,29 @@ def parse_post(path):
         'html': body_html,
         'minutes': max(1, round(words / 200)),
         'source': path.name,
+        'cover': cover,
+        'share_image': share_image,
     }
+
+
+def cover_image(source, cover):
+    """Validate a cover path and pick the link-preview image for it.
+
+    Link previews (LinkedIn, WhatsApp, Slack) do not render SVG, so an SVG cover needs a PNG
+    of the same name next to it; that PNG becomes og:image. A PNG or JPEG cover is used as is.
+    """
+    if not cover:
+        return None, None
+    if not re.match(r'^/assets/[\w./-]+\.(svg|png|jpe?g)$', cover) or '..' in cover:
+        raise BuildError('%s: cover must be a /assets/... .svg, .png or .jpg path' % source)
+    if not (ROOT / cover.lstrip('/')).is_file():
+        raise BuildError('%s: cover file not found: %s' % (source, cover))
+    if not cover.endswith('.svg'):
+        return cover, cover
+    png = cover[:-4] + '.png'
+    if not (ROOT / png.lstrip('/')).is_file():
+        raise BuildError('%s: SVG cover needs a PNG twin for link previews: %s' % (source, png))
+    return cover, png
 
 
 def load_posts(include_drafts):
@@ -351,13 +375,19 @@ def render_post(p):
         <h1>%s</h1>
         <p class="post-meta"><time datetime="%s">%s</time> · %d min read%s</p>
       </header>
-      <div class="prose">
+%s      <div class="prose">
 %s
       </div>
     </article>
     <p class="post-foot"><a href="/blog/">&lt; All posts</a><a href="/blog/feed.xml">RSS feed</a></p>''' % (
-        esc(p['title']), p['date'].isoformat(), human_date(p['date']), p['minutes'], draft_badge(p), p['html'])
+        esc(p['title']), p['date'].isoformat(), human_date(p['date']), p['minutes'], draft_badge(p),
+        '      <figure class="post-cover"><img src="%s" alt="%s" width="1200" height="630"></figure>\n' % (
+            p['cover'], esc(p['title'])) if p['cover'] else '',
+        p['html'])
     extra = '<meta property="article:published_time" content="%s">\n' % p['date'].isoformat()
+    if p['share_image']:
+        extra += ('<meta property="og:image" content="%s%s">\n'
+                  '<meta name="twitter:card" content="summary_large_image">\n') % (SITE_URL, p['share_image'])
     return page(p['title'] + ' | BlueCore', p['summary'], post_url(p), body, 'article', extra, noindex=p['draft'])
 
 

@@ -347,6 +347,12 @@ body.blog {
   letter-spacing: 0.02em;
 }
 .blog-head .post-meta { margin-top: 0.9rem; }
+.post-cover {
+  width: min(64rem, calc(100vw - 2.5rem));
+  margin: 0.5rem 0 2.2rem 50%;
+  transform: translateX(-50%);
+}
+.post-cover img { display: block; width: 100%; height: auto; border: 1px solid var(--blue-dim); box-shadow: 0 0 24px rgba(43,107,255,0.18); }
 .blog-head .lede { margin-top: 1rem; color: var(--text-dim); font-size: 1rem; }
 .blog-list { max-width: 46rem; margin: 0 auto; padding: 0 1.25rem 2rem; }
 

@@ -14,6 +14,8 @@
 <meta property="og:url" content="https://bluecore.joburg/blog/ise-eap-tls-without-hardware/">
 <meta property="og:type" content="article">
 <meta property="article:published_time" content="2026-09-15">
+<meta property="og:image" content="https://bluecore.joburg/assets/blog/eap-tls-cover.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="/site.css">
 </head>
 <body class="blog">
@@ -27,6 +29,7 @@
         <h1>EAP-TLS on Cisco ISE 3.5: what the defaults let through, and how we proved it without a single switch</h1>
         <p class="post-meta"><time datetime="2026-09-15">15 Sep 2026</time> · 15 min read</p>
       </header>
+      <figure class="post-cover"><img src="/assets/blog/eap-tls-cover.svg" alt="EAP-TLS on Cisco ISE 3.5: what the defaults let through, and how we proved it without a single switch" width="1200" height="630"></figure>
       <div class="prose">
 <p>EAP-TLS has a reputation as the strong option for network access: every device proves who it is with a certificate, and nobody types a password. That reputation assumes the policy server checks what you think it checks. On Cisco ISE 3.5 several of those checks are off by default, or are not done at all, and nothing on screen tells you.</p>
 <p>This post covers what we measured, and then exactly how we measured it: a certificate authority built with openssl, 802.1X and MAB driven by open-source RADIUS test tools, and not one switch, access point or real endpoint.</p>

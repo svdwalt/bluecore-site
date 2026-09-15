@@ -3,6 +3,7 @@ title: "EAP-TLS on Cisco ISE 3.5: what the defaults let through, and how we prov
 date: 2026-09-15
 summary: A revoked certificate got full access, a certificate with no clientAuth was accepted, and a dead OCSP responder went unnoticed. All measured on ISE 3.5 with openssl, eapol_test and radclient, and no network hardware at all.
 draft: false
+cover: /assets/blog/eap-tls-cover.svg
 ---
 
 EAP-TLS has a reputation as the strong option for network access: every device proves who it is with a certificate, and nobody types a password. That reputation assumes the policy server checks what you think it checks. On Cisco ISE 3.5 several of those checks are off by default, or are not done at all, and nothing on screen tells you.

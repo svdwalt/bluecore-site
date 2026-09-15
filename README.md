@@ -54,6 +54,11 @@ Then write the body in Markdown. Supported: `##`/`###` headings (a single `#` is
 links and images. Raw HTML is escaped, not passed through. Put images in `assets/` and
 link them as `/assets/name.png`.
 
+Optional cover: add `cover: /assets/blog/name.svg` (or `.png`/`.jpg`) to the front matter. It is
+shown under the post title and used as the link-preview image (`og:image`). Link previews do
+not render SVG, so an SVG cover needs a 1200×630 PNG of the same name next to it; the build
+fails if it is missing.
+
 Review, then publish:
 
 ```
