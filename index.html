@@ -152,13 +152,8 @@
     padding: 1.6rem 1.8rem;
     backdrop-filter: blur(2px);
   }
-  .intro p {
-    max-width: 62ch;
-    font-size: clamp(0.95rem, 2vw, 1.08rem);
-  }
-  .intro p + p { margin-top: 1rem; }
 
-  /* ---------- Services grid ---------- */
+  /* ---------- Card grid ---------- */
   .grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -307,45 +302,7 @@
       <h1 class="wordmark">BLUECORE</h1>
       <p class="tagline"><span id="typed"></span><span class="cursor" aria-hidden="true"></span></p>
       <p class="hero-sub">Who gets onto the network, how they prove it, and what policy they land in.</p>
-      <a class="scroll-hint" href="#what-we-do" aria-label="Scroll to what we do">▼</a>
-    </section>
-
-    <section class="section intro" id="what-we-do">
-      <h2>What we do</h2>
-      <div class="panel">
-        <p>BlueCore designs and validates network access control. We work out who and what is allowed onto a network, how each device proves who it is, and which policy it lands in once it is authenticated.</p>
-        <p>The tools are Cisco ISE, RADIUS, 802.1X, EAP-TLS and MAB. Every design is built in a lab, tested against real authentication flows, and documented so the evidence stands up when someone asks why it works.</p>
-      </div>
-    </section>
-
-    <section class="section" id="services">
-      <h2>Services</h2>
-      <div class="grid">
-        <article class="card">
-          <h3>ISE design and deployment</h3>
-          <p>Policy sets, identity sources, certificate profiles and authorisation results laid out before anything is clicked, then built and verified.</p>
-        </article>
-        <article class="card">
-          <h3>ISE health check and audit</h3>
-          <p>Read-only review of a running deployment: version and support status, policy sprawl, certificate expiry, node health and what the logs say.</p>
-        </article>
-        <article class="card">
-          <h3>802.1X and EAP-TLS rollout</h3>
-          <p>Machine and user certificates, PKI integration, OCSP and CRL checking, and a wired and wireless rollout order that does not lock anyone out.</p>
-        </article>
-        <article class="card">
-          <h3>MAB and IoT onboarding</h3>
-          <p>Getting printers, cameras, controllers and other devices that cannot do certificates onto the network with the least privilege that still works.</p>
-        </article>
-        <article class="card">
-          <h3>Vendor-neutral RADIUS policy</h3>
-          <p>A policy model written once in plain roles, then mapped onto Cisco ISE, Aruba ClearPass or Huawei so the same design ports between platforms.</p>
-        </article>
-        <article class="card">
-          <h3>Troubleshooting and migration</h3>
-          <p>Failed authentications traced end to end, and controlled moves between policy servers or versions with a rollback path at every step.</p>
-        </article>
-      </div>
+      <a class="scroll-hint" href="#threat-pulse" aria-label="Scroll to threat pulse">▼</a>
     </section>
 
     <section class="section" id="threat-pulse" hidden aria-live="polite">
