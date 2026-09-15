@@ -68,13 +68,12 @@
 
   /* ---------- Hero ---------- */
   .hero {
-    min-height: 100svh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 2rem 1.25rem 4rem;
+    padding: clamp(4rem, 14vh, 9rem) 1.25rem 1rem;
     background: radial-gradient(ellipse 60% 55% at 50% 50%, rgba(2,6,16,0.92) 0%, rgba(2,6,16,0.55) 55%, rgba(2,6,16,0) 100%);
   }
   .wordmark {
@@ -113,16 +112,6 @@
     color: var(--text-dim);
     font-size: clamp(0.85rem, 2vw, 1rem);
     text-shadow: 0 0 6px rgba(2,6,16,1);
-  }
-  .scroll-hint {
-    position: absolute;
-    bottom: 1.6rem;
-    left: 0; right: 0;
-    text-align: center;
-    color: var(--muted);
-    font-size: 0.75rem;
-    letter-spacing: 0.3em;
-    text-decoration: none;
   }
   .hero { position: relative; }
 
@@ -189,6 +178,7 @@
 
   /* ---------- Threat pulse ---------- */
   #threat-pulse[hidden], #threat-pulse [hidden] { display: none; }
+  #threat-pulse { padding-top: 2rem; }
   .pulse-intro {
     max-width: 62ch;
     color: var(--text-dim);
@@ -302,7 +292,6 @@
       <h1 class="wordmark">BLUECORE</h1>
       <p class="tagline"><span id="typed"></span><span class="cursor" aria-hidden="true"></span></p>
       <p class="hero-sub">Who gets onto the network, how they prove it, and what policy they land in.</p>
-      <a class="scroll-hint" href="#threat-pulse" aria-label="Scroll to threat pulse">▼</a>
     </section>
 
     <section class="section" id="threat-pulse" hidden aria-live="polite">
