@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>BlueCore blog</title>
+    <link>https://bluecore.joburg/blog/</link>
+    <atom:link href="https://bluecore.joburg/blog/feed.xml" rel="self" type="application/rss+xml"/>
+    <description>Notes from the BlueCore lab on network access control, identity and policy.</description>
+    <language>en-za</language>
+    <lastBuildDate>Tue, 15 Sep 2026 12:12:21 +0000</lastBuildDate>
+
+  </channel>
+</rss>

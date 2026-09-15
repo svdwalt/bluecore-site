@@ -117,6 +117,11 @@
   // the server's Cache-Control max-age.
   fetch(INTEL_ENDPOINT + '/intel')
     .then(res => { if (!res.ok) throw new Error('intel ' + res.status); return res.json(); })
-    .then(data => { if (render(data)) section.removeAttribute('hidden'); })
+    .then(data => {
+      if (!render(data)) return;
+      section.removeAttribute('hidden');
+      const navLink = document.getElementById('nav-pulse');
+      if (navLink) navLink.hidden = false;
+    })
     .catch(err => { console.debug('threat pulse unavailable:', err && err.message ? err.message : err); });
 })();
