@@ -17,6 +17,7 @@ Post file: posts/YYYY-MM-DD-some-slug.md, starting with front matter:
 blog/ is generated in full on every run. Never edit it by hand.
 """
 import datetime
+import hashlib
 import html
 import re
 import shutil
@@ -31,6 +32,16 @@ LATEST_COUNT = 3
 PREVIEW_DIR = ROOT / '_preview'
 # Files and folders copied into _preview/ so the preview is a complete site.
 PREVIEW_COPY = ['index.html', 'site.css', 'chat.js', 'intel.js', 'favicon.svg', 'robots.txt', 'assets']
+
+# Pages link /site.css?v=<content hash>. GitHub Pages lets browsers cache CSS for 10 minutes,
+# so without the hash a fresh page can arrive with stale styles after a deploy.
+CSS_LINK_RE = re.compile(r'href="/site\.css(?:\?v=[0-9a-f]+)?"')
+
+
+def css_href():
+    digest = hashlib.sha256((ROOT / 'site.css').read_bytes()).hexdigest()[:10]
+    return '/site.css?v=' + digest
+
 
 FILENAME_RE = re.compile(r'^(\d{4}-\d{2}-\d{2})-([a-z0-9]+(?:-[a-z0-9]+)*)\.md$')
 
@@ -343,7 +354,7 @@ def page(title, description, path, body, og_type='website', extra_head='', noind
 <meta property="og:description" content="%(desc)s">
 <meta property="og:url" content="%(url)s">
 <meta property="og:type" content="%(og_type)s">
-%(extra)s<link rel="stylesheet" href="/site.css">
+%(extra)s<link rel="stylesheet" href="%(css)s">
 </head>
 <body class="blog">
   <main>
@@ -364,7 +375,7 @@ def page(title, description, path, body, og_type='website', extra_head='', noind
 </html>
 ''' % {
         'title': esc(title), 'desc': esc(description), 'url': SITE_URL + path, 'og_type': og_type,
-        'robots': robots, 'extra': extra_head, 'body': body,
+        'robots': robots, 'extra': extra_head, 'body': body, 'css': css_href(),
         'blog_current': ' aria-current="page"' if path == '/blog/' else '',
     }
 
@@ -462,6 +473,9 @@ def update_homepage(index_path, posts):
     </section>''' % post_list(posts[:LATEST_COUNT])
     else:
         nav = latest = ''
+    if len(CSS_LINK_RE.findall(text)) != 1:
+        raise BuildError('index.html must link /site.css exactly once')
+    text = CSS_LINK_RE.sub('href="%s"' % css_href(), text)
     text = replace_block(text, 'nav', nav)
     text = replace_block(text, 'latest', latest)
     index_path.write_text(text, encoding='utf-8')
