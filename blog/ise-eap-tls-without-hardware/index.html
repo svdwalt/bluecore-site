@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EAP-TLS on Cisco ISE 3.5: what the defaults let through, and how we proved it without a single switch | BlueCore</title>
+<meta name="description" content="A revoked certificate got full access, a certificate with no clientAuth was accepted, and a dead OCSP responder went unnoticed. All measured on ISE 3.5 with openssl, eapol_test and radclient, and no network hardware at all.">
+<meta name="theme-color" content="#020610">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="canonical" href="https://bluecore.joburg/blog/ise-eap-tls-without-hardware/">
+<link rel="alternate" type="application/rss+xml" title="BlueCore blog" href="/blog/feed.xml">
+<meta property="og:title" content="EAP-TLS on Cisco ISE 3.5: what the defaults let through, and how we proved it without a single switch | BlueCore">
+<meta property="og:description" content="A revoked certificate got full access, a certificate with no clientAuth was accepted, and a dead OCSP responder went unnoticed. All measured on ISE 3.5 with openssl, eapol_test and radclient, and no network hardware at all.">
+<meta property="og:url" content="https://bluecore.joburg/blog/ise-eap-tls-without-hardware/">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2026-09-15">
+<link rel="stylesheet" href="/site.css">
+</head>
+<body class="blog">
+  <main>
+    <nav class="topnav" aria-label="Site">
+      <a class="topnav-home" href="/">BLUECORE</a>
+      <a href="/blog/">Blog</a>
+    </nav>
+    <article>
+      <header class="blog-head">
+        <h1>EAP-TLS on Cisco ISE 3.5: what the defaults let through, and how we proved it without a single switch</h1>
+        <p class="post-meta"><time datetime="2026-09-15">15 Sep 2026</time> · 14 min read</p>
+      </header>
+      <div class="prose">
+<p>EAP-TLS has a reputation as the strong option for network access: every device proves who it is with a certificate, and nobody types a password. That reputation assumes the policy server checks what you think it checks. On Cisco ISE 3.5 several of those checks are off by default, or are not done at all, and nothing on screen tells you.</p>
+<p>This post covers what we measured, and then exactly how we measured it: a certificate authority built with openssl, 802.1X and MAB driven by open-source RADIUS test tools, and not one switch, access point or real endpoint.</p>
+<p>Everything was observed on <strong>ISE 3.5.0.527, patch 3</strong>. Behaviour on other versions may differ, which is rather the point of measuring it.</p>
+<h2 id="finding-1-importing-a-ca-does-not-turn-on-revocation-checking">Finding 1: importing a CA does not turn on revocation checking</h2>
+<p>You import your issuing CA into the trusted certificate store, tick it for client authentication, and build your policy. It feels finished.</p>
+<p>It is not. On the imported CA, OCSP validation was <strong>off</strong>, CRL download was <strong>off</strong> and no OCSP service was selected. We revoked a certificate at the CA, published a fresh CRL, and presented it. It was accepted and placed in the <strong>full office VLAN</strong>.</p>
+<p>Revocation only started working once OCSP validation was explicitly enabled on the trust entry and pointed at a responder. Nothing warns you in between. If you have ever revoked a lost laptop&#x27;s certificate and assumed that closed the door, check this setting.</p>
+<h2 id="finding-2-when-the-ocsp-responder-is-down-ise-fails-open">Finding 2: when the OCSP responder is down, ISE fails open</h2>
+<p>With revocation checking on, we stopped the OCSP responder on purpose and presented two certificates, one valid and one revoked.</p>
+<div class="table-wrap"><table><thead><tr><th>OCSP responder</th><th>Reject if unreachable</th><th>Valid certificate</th><th>Revoked certificate</th></tr></thead><tbody><tr><td>up</td><td>off (default)</td><td>accept, office VLAN</td><td><strong>reject</strong></td></tr><tr><td><strong>down</strong></td><td><strong>off (default)</strong></td><td>accept, office VLAN</td><td><strong>ACCEPT, office VLAN</strong></td></tr><tr><td>down</td><td>on</td><td><strong>reject</strong></td><td>reject</td></tr><tr><td>up again</td><td>on</td><td>accept, office VLAN</td><td>reject</td></tr></tbody></table></div>
+<p>The default is fail-open, and it is silent. A certificate you have definitely revoked gets full access while the responder is unreachable, and the Access-Accept looks identical to a healthy one.</p>
+<p>Switching on <em>Reject the request if OCSP Responder is unreachable</em> gives fail-closed, but read row three: then an outage rejects <strong>everyone</strong>, valid users included. Recovery was clean once the responder came back.</p>
+<p>This is a real trade-off between availability and integrity, and it belongs to the business, not to whoever clicked through the wizard:</p>
+<ul><li><strong>Fail-open:</strong> a responder outage quietly turns revocation off.</li><li><strong>Fail-closed:</strong> a responder outage becomes a site-wide authentication failure.</li></ul>
+<p>Fail-closed is only responsible with a highly available responder. If that is not fundable, say plainly that revocation is best-effort. Our lab now runs fail-closed, so a dead responder shows up as failed tests rather than silent accepts.</p>
+<h2 id="finding-3-a-24-hour-ocsp-cache-hides-all-of-the-above">Finding 3: a 24-hour OCSP cache hides all of the above</h2>
+<p>The OCSP client profile caches responses for <strong>1,440 minutes</strong> by default. At that setting a certificate revoked this morning keeps working until tomorrow, and a responder that died an hour ago goes unnoticed for a day.</p>
+<p>We set the cache to one minute for testing. Any revocation test that does not account for the cache is measuring the cache, not the policy.</p>
+<h2 id="finding-4-clientauth-is-not-enforced-on-client-certificates">Finding 4: clientAuth is not enforced on client certificates</h2>
+<p>Our design gives each device class its own extended key usage OID, alongside the standard <code>clientAuth</code> usage that says &quot;this certificate may be used to authenticate a client&quot;. The design listed &quot;clientAuth missing&quot; as something that must be rejected, on the reasonable assumption that the policy server checks it.</p>
+<p>So we issued a certificate that carried the device-class OID and <strong>no clientAuth at all</strong>:</p>
+<pre><code>$ openssl x509 -in office-no-clientauth.crt -noout -ext extendedKeyUsage
+X509v3 Extended Key Usage:
+    1.3.6.1.4.1.99999.1.1.1</code></pre>
+<p>ISE accepted it for EAP-TLS and returned the full office VLAN.</p>
+<p>The consequence is bigger than one missing check. If the platform ignores clientAuth, the class OID becomes the <em>only</em> gate. On a site with a shared enterprise CA, a certificate issued for something else entirely could carry that OID and get office access.</p>
+<p><strong>The fix is in policy, not the platform.</strong> ISE exposes <code>CERTIFICATE: Extended Key Usage - Name</code> as a condition, so the authorisation rule now requires both:</p>
+<pre><code>CERTIFICATE: Extended Key Usage - OID   EQUALS  &lt;office class OID&gt;
+CERTIFICATE: Extended Key Usage - Name  EQUALS  clientAuth</code></pre>
+<p>Re-tested, the same certificate now lands in quarantine, and the valid office certificate is unaffected.</p>
+<p>There is a sting in the tail. A month later we found the fix had been applied to the office rule only. Both OT rules still checked the class OID without clientAuth, and nothing in the test suite would have caught it, because we had a no-clientauth certificate for the office class but not for OT. Both rules are now fixed and confirmed by reading the configuration back; the matching OT test certificate is written and its case is waiting to run. The lesson: a compensating control that lives in policy has to be tested <strong>per rule</strong>, or someone rebuilding one rule silently brings the weakness back.</p>
+<h2 id="finding-5-binding-a-certificate-to-hardware-works-if-the-mac-format-matches-exactly">Finding 5: binding a certificate to hardware works, if the MAC format matches exactly</h2>
+<p>For OT and IoT devices we wanted a certificate that only works on the device it was issued to. The device&#x27;s MAC address goes into the certificate&#x27;s Subject Alternative Name, and the rule compares it with the MAC the switch reports in <code>Calling-Station-Id</code>:</p>
+<pre><code>CERTIFICATE: Extended Key Usage - OID        EQUALS  &lt;OT class OID&gt;
+CERTIFICATE: Subject Alternative Name - DNS  EQUALS  Radius:Calling-Station-ID
+IdentityGroup: Name                          EQUALS  &lt;registered OT devices&gt;</code></pre>
+<p>The middle line compares one attribute with another. In the API that is a field that sits <code>null</code> on every ordinary condition, and it is the entire mechanism.</p>
+<p>It works: a certificate exported and presented from different hardware is quarantined. But the comparison is a <strong>literal string compare</strong>:</p>
+<div class="table-wrap"><table><thead><tr><th>MAC in the certificate</th><th>Presented from</th><th>Result</th></tr></thead><tbody><tr><td><code>AA-BB-CC-DD-EE-FF</code></td><td>same device</td><td>OT VLAN</td></tr><tr><td><code>AA-BB-CC-DD-EE-FF</code></td><td>different device</td><td>quarantine</td></tr><tr><td><code>aabbccddeeff</code> (same MAC)</td><td>same device</td><td>quarantine</td></tr><tr><td><code>AABBCCDDEEFF</code> (same MAC)</td><td>same device</td><td>quarantine</td></tr></tbody></table></div>
+<p>The certificate authority must mint the MAC in exactly the format the authenticator sends, and that format depends on the switch or controller vendor. Measure it before you issue a single certificate.</p>
+<p>Two honest limits. First, identity extraction does not validate that the SAN is a MAC at all: a SAN of <code>ot-dotted.lab.example</code> authenticated happily. Second, <code>Calling-Station-Id</code> is reported by the switch, not proven by the device. The binding stops certificate transplant; it does not stop someone who controls a switch or can spoof a MAC on the wire. Say so rather than oversell it.</p>
+<h2 id="how-we-tested-all-of-this-without-hardware">How we tested all of this without hardware</h2>
+<p>The key idea is simple. <strong>ISE cannot tell whether a RADIUS request came from a switch or from a script.</strong> It sees an Access-Request from an IP address registered as a network device, signed with the right shared secret. So we registered a Linux test VM as that network device and had it speak RADIUS directly.</p>
+<p>The whole lab is three virtual machines:</p>
+<div class="table-wrap"><table><thead><tr><th>VM</th><th>Role</th></tr></thead><tbody><tr><td>Policy server</td><td>ISE 3.5, the device under test</td></tr><tr><td>Services host</td><td>Certificate authority, OCSP responder, CRL web server, DNS, NTP</td></tr><tr><td>Test host</td><td><code>eapol_test</code> for 802.1X, <code>radclient</code> for MAB, <code>tcpdump</code> for captures</td></tr></tbody></table></div>
+<p>No switch, no access point, no endpoints. What this tests is the policy server&#x27;s decisions. What it deliberately does not test is switch behaviour: port control, downloadable ACL enforcement and change of authorisation are out of scope.</p>
+<h3 id="a-certificate-authority-with-openssl">A certificate authority with openssl</h3>
+<p>A two-tier PKI: a root CA, and an issuing CA signed by it with <code>pathlen:0</code> so it cannot sign further CAs. The issuing CA also signs a dedicated OCSP responder certificate with the <code>OCSPSigning</code> usage.</p>
+<p>Each device class is an openssl extension section. The SAN comes from an environment variable, so one section serves many certificates:</p>
+<pre><code>[ v3_office ]
+basicConstraints        = CA:FALSE
+keyUsage                = critical, digitalSignature, keyEncipherment
+extendedKeyUsage        = clientAuth, 1.3.6.1.4.1.99999.1.1.1
+subjectAltName          = $ENV::SAN
+authorityInfoAccess     = OCSP;URI:http://ca.lab.example:2560
+crlDistributionPoints   = URI:http://ca.lab.example/crl/issuing-ca.crl</code></pre>
+<p>(The <code>99999</code> arc is a placeholder, not a registered enterprise number.) A negative variant is just another section: <code>v3_office_no_clientauth</code> is identical except that <code>extendedKeyUsage</code> lists only the class OID.</p>
+<p>The interesting part is the <strong>corpus</strong>: a set of certificates where each one is wrong in exactly one way. Issuing one looks like this:</p>
+<pre><code class="language-bash">export SAN=&quot;DNS:ws-office-001.lab.example&quot;
+openssl genrsa -out office-valid.key 2048
+openssl req -new -sha256 -key office-valid.key \
+    -subj &quot;/O=BlueCore Lab/CN=WS-OFFICE-001&quot; -out office-valid.csr
+openssl ca -config openssl-ca.cnf -batch \
+    -extfile class-office.cnf -extensions v3_office \
+    -in office-valid.csr -out office-valid.crt</code></pre>
+<p>The broken ones only change a flag or two:</p>
+<pre><code class="language-bash"># expired: validity window entirely in the past
+openssl ca ... -extensions v3_office -startdate 20240101000000Z -enddate 20240201000000Z
+
+# not yet valid (also catches clock skew)
+openssl ca ... -extensions v3_office -startdate 20300101000000Z -enddate 20310101000000Z
+
+# revoked: issue normally, then revoke and publish a fresh CRL
+openssl ca -config openssl-ca.cnf -revoke office-revoked.crt
+openssl ca -config openssl-ca.cnf -gencrl -out issuing-ca.crl
+
+# wrong issuer: signed by a throwaway &quot;rogue&quot; CA outside the trust store
+openssl x509 -req -in office-rogue.csr -CA rogue-ca.crt -CAkey rogue-ca.key \
+    -CAcreateserial -days 825 -extfile class-office.cnf -extensions v3_office \
+    -out office-wrong-issuer.crt</code></pre>
+<p>The corpus ended up at 27 certificates. The ones that carried the findings above:</p>
+<div class="table-wrap"><table><thead><tr><th>Certificate</th><th>What it must prove</th></tr></thead><tbody><tr><td><code>office-valid</code></td><td>the baseline authenticates</td></tr><tr><td><code>office-expired</code>, <code>office-notyet</code></td><td>the validity window is enforced</td></tr><tr><td><code>office-revoked</code></td><td>revocation is actually checked, not just configured</td></tr><tr><td><code>office-wrong-issuer</code></td><td>a chain outside the trust anchor is rejected</td></tr><tr><td><code>office-no-clientauth</code></td><td>extended key usage is enforced</td></tr><tr><td><code>office-wrong-eku</code></td><td>the class OID discriminates, not merely exists</td></tr><tr><td><code>otiot-valid</code></td><td>a MAC-bound certificate works on its own device</td></tr><tr><td><code>mac-bare-lower</code>, <code>mac-bare-upper</code>, ...</td><td>which SAN formats bind and which do not</td></tr></tbody></table></div>
+<p>Because some certificates are deliberately expired or not yet valid, <strong>time matters</strong>. The services host runs chrony as the lab&#x27;s time source. A skewed clock quietly turns a negative test into a false pass.</p>
+<h3 id="an-ocsp-responder-you-can-switch-off">An OCSP responder you can switch off</h3>
+<p>openssl ships a small OCSP responder. It is a test tool, single-threaded and not for production, but it reads the CA&#x27;s own database, so revoking a certificate takes effect immediately:</p>
+<pre><code class="language-bash">openssl ocsp -index /opt/lab-ca/issuing/index.txt \
+    -CA issuing-ca.crt -rsigner ocsp.crt -rkey ocsp.key \
+    -port 2560 -text</code></pre>
+<p>We run it as its own systemd unit, separate from the web server that publishes the CRL, for one reason: so it can be killed on demand.</p>
+<pre><code class="language-bash">sudo systemctl stop lab-ocsp     # responder unreachable
+sudo systemctl start lab-ocsp    # responder back</code></pre>
+<p>That is the entire fail-open experiment from finding 2. A lab that cannot produce a failure on demand cannot make a claim about it.</p>
+<h3 id="802-1x-with-eapol-test">802.1X with eapol_test</h3>
+<p><code>eapol_test</code> comes from the wpa_supplicant source tree. It is a complete 802.1X supplicant that talks RADIUS straight to the server, skipping the switch. The distribution packages do not include it, so it is built from source:</p>
+<pre><code class="language-bash">cd wpa_supplicant-2.12/wpa_supplicant
+cp defconfig .config
+echo &#x27;CONFIG_EAPOL_TEST=y&#x27; &gt;&gt; .config
+make eapol_test</code></pre>
+<p>Each test is a small supplicant config naming one certificate from the corpus:</p>
+<pre><code>network={
+    key_mgmt=IEEE8021X
+    eap=TLS
+    identity=&quot;WS-OFFICE-001&quot;
+    ca_cert=&quot;chain.pem&quot;
+    client_cert=&quot;office-valid.crt&quot;
+    private_key=&quot;office-valid.key&quot;
+}</code></pre>
+<p>And the run pretends to be a switch port:</p>
+<pre><code class="language-bash">eapol_test -c office-valid.conf \
+    -a 192.0.2.10 -p 1812 -s &quot;$RADIUS_SHARED_SECRET&quot; \
+    -M aa:bb:cc:00:11:22 \
+    -N 4:x:c000020b \
+    -N 61:d:15 \
+    -r0</code></pre>
+<p><code>-M</code> sets <code>Calling-Station-Id</code>. The <code>-N</code> options add RADIUS attributes by number, and both of these cost us time before we added them:</p>
+<ul><li><strong><code>-N 61:d:15</code> sets NAS-Port-Type to Ethernet.</strong> eapol_test defaults to 19, <em>wireless</em>, even for what you think is a wired test. It did not matter until we built a wireless policy set, at which point every &quot;wired&quot; test would have matched it.</li><li><strong><code>-N 4:x:...</code> sets NAS-IP-Address</strong> (hex for 192.0.2.11 here). The default is 127.0.0.1. If your policy sets are selected by device address, the request silently lands in the default set and gets an Access-Accept with <strong>no authorisation attributes at all</strong>, which looks like success.</li></ul>
+<p>A successful run ends with the result and the VLAN:</p>
+<pre><code>RADIUS message: code=2 (Access-Accept) identifier=10 length=269
+   Attribute 64 (Tunnel-Type) length=6
+      Value: 0100000d
+   Attribute 81 (Tunnel-Private-Group-Id) length=5
+      Value: 013130
+...
+SUCCESS</code></pre>
+<p><code>013130</code> is a tag byte <code>01</code> followed by ASCII <code>10</code>: VLAN 10.</p>
+<h3 id="mab-with-radclient">MAB with radclient</h3>
+<p>MAC Authentication Bypass is even simpler, because there is no EAP conversation at all. The switch sends the MAC as both username and password with <code>Service-Type = Call-Check</code>. <code>radclient</code>, from the FreeRADIUS utilities package, sends exactly that:</p>
+<pre><code class="language-bash">cat &lt;&lt;&#x27;EOF&#x27; | radclient -x -t 5 -r 1 192.0.2.10:1812 auth &quot;$RADIUS_SHARED_SECRET&quot;
+User-Name = &quot;aabbcc000001&quot;
+User-Password = &quot;aabbcc000001&quot;
+Service-Type = Call-Check
+Calling-Station-Id = &quot;AA:BB:CC:00:00:01&quot;
+NAS-Port-Type = Ethernet
+NAS-IP-Address = 192.0.2.11
+NAS-Port = 0
+EOF</code></pre>
+<pre><code>Received Access-Accept Id 18 from 192.0.2.10:1812 to 192.0.2.11:57540
+    User-Name = &quot;AA-BB-CC-00-00-01&quot;
+    Tunnel-Type:1 = VLAN
+    Tunnel-Medium-Type:1 = IEEE-802
+    Tunnel-Private-Group-Id:1 = &quot;30&quot;</code></pre>
+<p>The negative MAB cases are just as cheap: an unregistered MAC must be rejected, and a request with no NAS-Port-Type at all must fail rather than fall through to something permissive.</p>
+<h3 id="tests-as-data-not-scripts">Tests as data, not scripts</h3>
+<p>Every case is a small YAML file that says what to send and what must come back, never how to send it:</p>
+<pre><code class="language-yaml">id: OFFICE-TLS-007-revoked
+tier: office
+method: eap-tls
+cert: office-revoked
+send: { calling-station-id: &quot;aa:bb:cc:00:11:28&quot; }
+expect:
+  result: reject
+forbid: [any-vlan]
+status: active</code></pre>
+<p>A small Python runner turns each case into an eapol_test or radclient call, parses the reply and records a result. Three rules keep the results honest:</p>
+<ol><li><strong><code>forbid</code> is mandatory.</strong> A case must say what must <em>not</em> come back, even if the answer is an explicit empty list, so &quot;checked nothing&quot; can never pass for &quot;found nothing&quot;.</li><li><strong>Roles are abstract.</strong> A case says <code>ROLE_OFFICE</code>, not &quot;VLAN 10&quot;. A per-platform mapping file translates it, so the same cases can run against another vendor&#x27;s policy server unchanged.</li><li><strong>Every result names the configuration it ran against.</strong> The runner refuses to write a result without the git commit of the captured ISE configuration. A result that cannot say what it tested is not evidence.</li></ol>
+<p>Most of the suite is negative on purpose: expired, not yet valid, revoked, wrong issuer, missing clientAuth, wrong device class, transplanted certificate, unregistered device, wrong network. A design tested only with valid credentials proves nothing about rejection.</p>
+<h3 id="packet-captures-and-a-surprise-about-fragments">Packet captures, and a surprise about fragments</h3>
+<p>We captured the RADIUS traffic with <code>tcpdump</code> on the test host while the cases ran. Because this EAP-TLS negotiates TLS 1.2, the certificates travel in cleartext inside the handshake, so the capture shows the policy server presenting the certificate from our lab CA. That is the server certificate binding demonstrated on the wire, not inferred from a settings page.</p>
+<p>The capture also showed the client&#x27;s certificate exchange <strong>fragmenting at the IP layer</strong>. That matters in the field: firewalls, load balancers and some WAN paths drop IP fragments, and when they do EAP-TLS fails in a way that looks like a certificate or policy problem. If RADIUS crosses a firewall on your site, check fragment handling before you debug certificates.</p>
+<h2 id="what-to-check-on-your-own-deployment">What to check on your own deployment</h2>
+<ol><li>Open each trusted CA used for client authentication and confirm OCSP or CRL checking is actually <strong>enabled</strong>.</li><li>Decide fail-open or fail-closed deliberately, write the decision down, and fund responder redundancy if you choose fail-closed.</li><li>Look at the OCSP response cache. A day is a long time for a revoked certificate.</li><li>Add <code>Extended Key Usage - Name EQUALS clientAuth</code> to every certificate authorisation rule, and test each rule with a certificate that lacks it.</li><li>If you bind certificates to MAC addresses, measure the exact <code>Calling-Station-Id</code> format your switches and controllers send before issuing anything.</li><li>Keep one deliberately broken certificate for every check you rely on, and run them after every change.</li></ol>
+<p>None of this needed a hardware budget. It needed a CA you control, a responder you can switch off, two free RADIUS test tools, and the habit of testing the rejections as carefully as the successes.</p>
+      </div>
+    </article>
+    <p class="post-foot"><a href="/blog/">&lt; All posts</a><a href="/blog/feed.xml">RSS feed</a></p>
+  </main>
+
+  <footer>
+    BlueCore, Johannesburg. 2026.
+  </footer>
+
+  <div class="scanlines" aria-hidden="true"></div>
+<script src="/chat.js" defer></script>
+</body>
+</html>

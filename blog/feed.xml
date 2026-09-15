@@ -8,6 +8,13 @@
     <language>en-za</language>
     <lastBuildDate>Tue, 15 Sep 2026 06:00:00 +0000</lastBuildDate>
     <item>
+      <title>EAP-TLS on Cisco ISE 3.5: what the defaults let through, and how we proved it without a single switch</title>
+      <link>https://bluecore.joburg/blog/ise-eap-tls-without-hardware/</link>
+      <guid isPermaLink="true">https://bluecore.joburg/blog/ise-eap-tls-without-hardware/</guid>
+      <pubDate>Tue, 15 Sep 2026 06:00:00 +0000</pubDate>
+      <description>A revoked certificate got full access, a certificate with no clientAuth was accepted, and a dead OCSP responder went unnoticed. All measured on ISE 3.5 with openssl, eapol_test and radclient, and no network hardware at all.</description>
+    </item>
+    <item>
       <title>How much of Cisco ISE 3.5 can you actually automate through the API?</title>
       <link>https://bluecore.joburg/blog/ise-api-coverage/</link>
       <guid isPermaLink="true">https://bluecore.joburg/blog/ise-api-coverage/</guid>
