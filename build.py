@@ -375,12 +375,16 @@ def render_index(posts):
                 '/blog/', body, noindex=any(p['draft'] for p in posts))
 
 
+def feed_stamp(date):
+    # Posts carry a date only; publish time is fixed at 08:00 SAST. lastBuildDate uses the
+    # newest post's date too, so rebuilding without a new post leaves feed.xml unchanged.
+    stamp = datetime.datetime.combine(date, datetime.time(6, 0), datetime.timezone.utc)
+    return stamp.strftime('%a, %d %b %Y %H:%M:%S +0000')
+
+
 def render_feed(posts):
-    now = datetime.datetime.now(datetime.timezone.utc)
     items = []
     for p in posts:
-        # Posts carry a date only; publish time is fixed at 08:00 SAST.
-        stamp = datetime.datetime.combine(p['date'], datetime.time(6, 0), datetime.timezone.utc)
         url = SITE_URL + post_url(p)
         items.append('''    <item>
       <title>%s</title>
@@ -388,7 +392,7 @@ def render_feed(posts):
       <guid isPermaLink="true">%s</guid>
       <pubDate>%s</pubDate>
       <description>%s</description>
-    </item>''' % (xml_escape(p['title']), url, url, stamp.strftime('%a, %d %b %Y %H:%M:%S +0000'),
+    </item>''' % (xml_escape(p['title']), url, url, feed_stamp(p['date']),
                   xml_escape(p['summary'])))
     return '''<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
@@ -402,7 +406,8 @@ def render_feed(posts):
 %s
   </channel>
 </rss>
-''' % (SITE_URL, SITE_URL, now.strftime('%a, %d %b %Y %H:%M:%S +0000'), '\n'.join(items))
+''' % (SITE_URL, SITE_URL, feed_stamp(posts[0]['date']) if posts else 'Thu, 01 Jan 2026 06:00:00 +0000',
+       '\n'.join(items))
 
 
 def replace_block(text, name, content):

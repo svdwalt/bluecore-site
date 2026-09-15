@@ -6,7 +6,7 @@
     <atom:link href="https://bluecore.joburg/blog/feed.xml" rel="self" type="application/rss+xml"/>
     <description>Notes from the BlueCore lab on network access control, identity and policy.</description>
     <language>en-za</language>
-    <lastBuildDate>Tue, 15 Sep 2026 12:19:22 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 15 Sep 2026 06:00:00 +0000</lastBuildDate>
     <item>
       <title>How much of Cisco ISE 3.5 can you actually automate through the API?</title>
       <link>https://bluecore.joburg/blog/ise-api-coverage/</link>
