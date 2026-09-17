@@ -3,7 +3,7 @@ title: "EAP-TLS on Cisco ISE 3.5: what the defaults let through, and how we prov
 date: 2026-09-15
 summary: A revoked certificate got full access, a certificate with no clientAuth was accepted, and a dead OCSP responder went unnoticed. All measured on ISE 3.5 with openssl, eapol_test and radclient, and no network hardware at all.
 draft: false
-cover: /assets/blog/eap-tls-cover.svg
+cover: /assets/blog/eap-tls-cover.png
 ---
 
 EAP-TLS has a reputation as the strong option for network access: every device proves who it is with a certificate, and nobody types a password. That reputation assumes the policy server checks what you think it checks. On Cisco ISE 3.5 several of those checks are off by default, or are not done at all, and nothing on screen tells you.
@@ -114,7 +114,7 @@ The whole lab is three virtual machines:
 
 How the pieces talk to each other, using one test as the example (tap the diagram to open it full size):
 
-[![Diagram of the lab: the test host sends RADIUS to Cisco ISE as if it were a switch, ISE asks the OCSP responder on the services host whether the certificate is revoked, then answers the test host with Accept plus VLAN or Reject. Dashed setup flows: certificates copied from the services host to the test host, test cases synced from the workstation, and ISE configuration built and captured over the API.](/assets/blog/eap-tls-lab.svg)](/assets/blog/eap-tls-lab.svg)
+[![Diagram of the lab: the test host sends RADIUS to Cisco ISE as if it were a switch, ISE asks the OCSP responder on the services host whether the certificate is revoked, then answers the test host with Accept plus VLAN or Reject. Dashed setup flows: certificates copied from the services host to the test host, test cases synced from the workstation, and ISE configuration built and captured over the API.](/assets/blog/eap-tls-lab.png)](/assets/blog/eap-tls-lab.png)
 
 No switch, no access point, no endpoints. What this tests is the policy server's decisions. What it deliberately does not test is switch behaviour: port control, downloadable ACL enforcement and change of authorisation are out of scope.
 
