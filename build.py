@@ -346,7 +346,7 @@ def page(title, description, path, body, og_type='website', extra_head='', noind
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>%(title)s</title>
 <meta name="description" content="%(desc)s">
-<meta name="theme-color" content="#020610">
+<meta name="theme-color" content="#ffffff">
 %(robots)s<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="canonical" href="%(url)s">
 <link rel="alternate" type="application/rss+xml" title="BlueCore blog" href="/blog/feed.xml">
@@ -354,7 +354,8 @@ def page(title, description, path, body, og_type='website', extra_head='', noind
 <meta property="og:description" content="%(desc)s">
 <meta property="og:url" content="%(url)s">
 <meta property="og:type" content="%(og_type)s">
-%(extra)s<link rel="stylesheet" href="%(css)s">
+%(extra)s<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="%(css)s">
 </head>
 <body class="blog">
   <main>
@@ -369,7 +370,6 @@ def page(title, description, path, body, og_type='website', extra_head='', noind
     BlueCore, Johannesburg. 2026.
   </footer>
 
-  <div class="scanlines" aria-hidden="true"></div>
 <script src="/chat.js" defer></script>
 </body>
 </html>

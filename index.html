@@ -5,18 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BlueCore — network access, identity and policy</title>
 <meta name="description" content="BlueCore designs and validates network access control: Cisco ISE, RADIUS, 802.1X, EAP-TLS and MAB. Johannesburg, South Africa.">
-<meta name="theme-color" content="#020610">
+<meta name="theme-color" content="#ffffff">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <meta property="og:title" content="BlueCore">
 <meta property="og:description" content="Network access, identity and policy. Cisco ISE, RADIUS, 802.1X, EAP-TLS and MAB — designed, tested, documented.">
 <meta property="og:url" content="https://bluecore.joburg/">
 <meta property="og:type" content="website">
-<link rel="stylesheet" href="/site.css?v=3776e17d20">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/site.css?v=1449f8e14a">
 <link rel="alternate" type="application/rss+xml" title="BlueCore blog" href="/blog/feed.xml">
 </head>
 <body>
-  <canvas id="rain" aria-hidden="true"></canvas>
-
   <main>
     <nav class="topnav" aria-label="Site">
       <!-- blog:nav -->
@@ -27,7 +26,7 @@
 
     <section class="hero">
       <h1 class="wordmark">BLUECORE</h1>
-      <p class="tagline"><span id="typed"></span><span class="cursor" aria-hidden="true"></span></p>
+      <p class="tagline">Network access. Identity. Policy.</p>
       <p class="hero-sub">Who gets onto the network, how they prove it, and what policy they land in.</p>
     </section>
 
@@ -79,120 +78,6 @@
     BlueCore, Johannesburg. 2026.
   </footer>
 
-  <div class="scanlines" aria-hidden="true"></div>
-
-<script>
-/* ---------- Digital rain, blue edition ---------- */
-(function () {
-  const canvas = document.getElementById('rain');
-  const ctx = canvas.getContext('2d');
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF:・=+*<>¦'.split('');
-  const WORDS = ['BLUECORE', 'RADIUS', '802.1X', 'EAP-TLS', 'MAB', 'ISE', 'IDENTITY', 'POLICY', 'ACCESS GRANTED', 'AUTHENTICATED', 'THREATFOX', 'C2'];
-
-  const fontSize = 16;
-  let columns, drops, wordCol, timer = null;
-
-  function setup() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    columns = Math.floor(canvas.width / fontSize) + 1;
-    drops = Array.from({ length: columns }, () => Math.random() * -canvas.height / fontSize);
-    wordCol = Array.from({ length: columns }, () => null);
-    ctx.fillStyle = '#020610';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
-
-  function maybeSeedWord(i) {
-    if (!wordCol[i] && Math.random() > 0.997) {
-      const w = WORDS[Math.floor(Math.random() * WORDS.length)].replace(/ /g, '');
-      wordCol[i] = { text: w, index: 0 };
-    }
-  }
-
-  function draw() {
-    ctx.fillStyle = 'rgba(2, 6, 16, 0.07)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.font = fontSize + "px 'Courier New', monospace";
-
-    for (let i = 0; i < drops.length; i++) {
-      maybeSeedWord(i);
-
-      let char, isWord = false;
-      if (wordCol[i]) {
-        char = wordCol[i].text[wordCol[i].index++];
-        isWord = true;
-        if (wordCol[i].index >= wordCol[i].text.length) wordCol[i] = null;
-      } else {
-        char = chars[Math.floor(Math.random() * chars.length)];
-      }
-
-      const x = i * fontSize;
-      const y = drops[i] * fontSize;
-
-      if (isWord) {
-        ctx.fillStyle = '#ffffff';
-        ctx.shadowColor = '#4da3ff';
-        ctx.shadowBlur = 14;
-      } else if (Math.random() > 0.975) {
-        ctx.fillStyle = '#dff0ff';
-        ctx.shadowColor = '#4da3ff';
-        ctx.shadowBlur = 8;
-      } else {
-        ctx.fillStyle = '#2b6bff';
-        ctx.shadowBlur = 0;
-      }
-
-      ctx.fillText(char, x, y);
-      ctx.shadowBlur = 0;
-
-      if (y > canvas.height && Math.random() > 0.975) drops[i] = 0;
-      drops[i]++;
-    }
-  }
-
-  function start() {
-    if (timer || reduceMotion) return;
-    timer = setInterval(draw, 40);
-  }
-  function stop() {
-    if (timer) { clearInterval(timer); timer = null; }
-  }
-
-  setup();
-  if (reduceMotion) {
-    // One static frame: run the simulation forward a few hundred ticks without animating.
-    for (let k = 0; k < 400; k++) draw();
-  } else {
-    start();
-  }
-
-  let resizeTimer;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => { setup(); if (reduceMotion) for (let k = 0; k < 400; k++) draw(); }, 150);
-  });
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) stop(); else start();
-  });
-})();
-
-/* ---------- Typed tagline ---------- */
-(function () {
-  const el = document.getElementById('typed');
-  const text = 'NETWORK ACCESS. IDENTITY. POLICY.';
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    el.textContent = text;
-    return;
-  }
-  let i = 0;
-  const t = setInterval(() => {
-    el.textContent = text.slice(0, ++i);
-    if (i >= text.length) clearInterval(t);
-  }, 55);
-})();
-</script>
 <script src="/chat.js" defer></script>
 <script src="/intel.js" defer></script>
 </body>

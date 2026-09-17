@@ -11,46 +11,48 @@
   if (CHAT_ENDPOINT.includes('TAILNET')) return;
 
   const css = `
-  #bc-chat-btn{position:fixed;right:18px;bottom:18px;z-index:50;font-family:var(--mono,monospace);font-size:.85rem;
-    letter-spacing:.12em;color:var(--text,#dff0ff);background:var(--panel,rgba(2,6,16,.85));border:1px solid var(--blue,#2b6bff);
-    padding:.65rem 1rem;cursor:pointer;box-shadow:0 0 18px rgba(43,107,255,.35);transition:box-shadow .2s,transform .2s}
-  #bc-chat-btn:hover{box-shadow:0 0 28px rgba(77,163,255,.6);transform:translateY(-1px)}
+  #bc-chat-btn{position:fixed;right:18px;bottom:18px;z-index:50;font-family:var(--hand,cursive);font-size:1.15rem;
+    color:var(--ink,#2b2b2b);background:var(--amber-bg,#fff2c2);border:2px solid var(--ink,#2b2b2b);
+    border-radius:255px 15px 225px 15px / 15px 225px 15px 255px;box-shadow:2px 3px 0 -1px rgba(43,43,43,.28);
+    padding:.45rem 1.1rem;cursor:pointer;transition:transform .15s}
+  #bc-chat-btn:hover{transform:translateY(-1px)}
   #bc-chat{position:fixed;right:18px;bottom:72px;z-index:51;width:min(380px,calc(100vw - 36px));height:min(520px,calc(100vh - 100px));
-    display:flex;flex-direction:column;background:var(--panel,rgba(2,6,16,.92));backdrop-filter:blur(6px);
-    border:1px solid var(--blue,#2b6bff);box-shadow:0 0 30px rgba(43,107,255,.35);font-family:var(--mono,monospace);color:var(--text,#dff0ff)}
+    display:flex;flex-direction:column;background:var(--paper,#fff);border:2px solid var(--ink,#2b2b2b);
+    border-radius:15px 225px 15px 255px / 255px 15px 225px 15px;box-shadow:2px 3px 0 -1px rgba(43,43,43,.28);
+    font-family:var(--sans,sans-serif);color:var(--ink,#2b2b2b);overflow:hidden}
   #bc-chat[hidden]{display:none}
-  #bc-chat header{display:flex;align-items:center;justify-content:space-between;padding:.6rem .9rem;border-bottom:1px solid var(--blue-dim,#123a8a);
-    font-size:.75rem;letter-spacing:.18em;color:var(--blue-bright,#4da3ff)}
-  #bc-chat header button{background:none;border:0;color:var(--text-dim,#8fb4e8);font:inherit;cursor:pointer;font-size:1rem}
-  #bc-log{flex:1;overflow-y:auto;padding:.8rem .9rem;display:flex;flex-direction:column;gap:.6rem;font-size:.85rem;line-height:1.5}
-  .bc-m{max-width:92%;padding:.5rem .7rem;white-space:pre-wrap;word-wrap:break-word;border:1px solid var(--blue-faint,#0a1f4d)}
-  .bc-u{align-self:flex-end;background:rgba(43,107,255,.18);border-color:var(--blue-dim,#123a8a)}
-  .bc-a{align-self:flex-start;background:rgba(2,6,16,.6)}
-  .bc-a.bc-busy::after{content:'▌';animation:bcblink 1s steps(2) infinite;color:var(--blue-bright,#4da3ff)}
-  .bc-err{align-self:center;color:var(--muted,#5b7fc4);font-size:.75rem;text-align:center}
+  #bc-chat header{display:flex;align-items:center;justify-content:space-between;padding:.5rem 1.1rem;border-bottom:2px dashed var(--rule,#d9d2be);
+    font-family:var(--hand,cursive);font-size:1.2rem;color:var(--amber,#8a6d1f)}
+  #bc-chat header button{background:none;border:0;color:var(--ink-soft,#5a564d);font:inherit;cursor:pointer;font-size:1.1rem}
+  #bc-log{flex:1;overflow-y:auto;padding:.8rem 1rem;display:flex;flex-direction:column;gap:.6rem;font-size:.95rem;line-height:1.5}
+  .bc-m{max-width:92%;padding:.5rem .8rem;white-space:pre-wrap;word-wrap:break-word;border:1.5px solid var(--ink,#2b2b2b);border-radius:12px}
+  .bc-u{align-self:flex-end;background:var(--blue-bg,#dbe9f7);border-bottom-right-radius:3px}
+  .bc-a{align-self:flex-start;background:var(--green-bg,#e3f2df);border-bottom-left-radius:3px}
+  .bc-a.bc-busy::after{content:'▌';animation:bcblink 1s steps(2) infinite;color:var(--amber,#8a6d1f)}
+  .bc-err{align-self:center;color:var(--red,#b93a2b);font-size:.85rem;text-align:center}
   @keyframes bcblink{50%{opacity:0}}
-  #bc-form{display:flex;border-top:1px solid var(--blue-dim,#123a8a)}
-  #bc-in{flex:1;background:transparent;border:0;outline:0;color:var(--text,#dff0ff);font:inherit;font-size:.9rem;padding:.7rem .9rem}
-  #bc-in::placeholder{color:var(--muted,#5b7fc4)}
-  #bc-send{background:none;border:0;border-left:1px solid var(--blue-dim,#123a8a);color:var(--blue-bright,#4da3ff);font:inherit;padding:0 1rem;cursor:pointer}
+  #bc-form{display:flex;border-top:2px dashed var(--rule,#d9d2be)}
+  #bc-in{flex:1;background:transparent;border:0;outline:0;color:var(--ink,#2b2b2b);font:inherit;font-size:.95rem;padding:.7rem 1rem}
+  #bc-in::placeholder{color:var(--ink-soft,#5a564d)}
+  #bc-send{background:none;border:0;border-left:2px dashed var(--rule,#d9d2be);color:var(--blue,#1a4d8f);font-family:var(--hand,cursive);font-size:1.1rem;padding:0 1rem;cursor:pointer}
   #bc-send:disabled{opacity:.4;cursor:default}
-  #bc-note{font-size:.62rem;color:var(--muted,#5b7fc4);padding:.35rem .9rem .5rem;line-height:1.4}
-  #bc-ts{padding:0 .9rem}
-  @media (max-width:560px){#bc-chat{right:0;bottom:0;width:100vw;height:100vh;border:0}#bc-chat-btn{right:12px;bottom:12px}}`;
+  #bc-note{font-size:.78rem;color:var(--ink-soft,#5a564d);padding:.35rem 1rem .6rem;line-height:1.4}
+  #bc-ts{padding:0 1rem}
+  @media (max-width:560px){#bc-chat{right:0;bottom:0;width:100vw;height:100vh;border:0;border-radius:0}#bc-chat-btn{right:12px;bottom:12px}}`;
 
   const style = document.createElement('style'); style.textContent = css; document.head.appendChild(style);
 
   const btn = document.createElement('button');
-  btn.id = 'bc-chat-btn'; btn.type = 'button'; btn.textContent = '> CHAT';
+  btn.id = 'bc-chat-btn'; btn.type = 'button'; btn.textContent = 'Ask me';
   btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-controls', 'bc-chat');
 
   const panel = document.createElement('section');
   panel.id = 'bc-chat'; panel.hidden = true; panel.setAttribute('aria-label', 'BlueCore assistant');
   panel.innerHTML = `
-    <header><span>BLUECORE // ASSISTANT</span><button type="button" id="bc-close" aria-label="Close chat">✕</button></header>
+    <header><span>BlueCore assistant</span><button type="button" id="bc-close" aria-label="Close chat">✕</button></header>
     <div id="bc-log" role="log" aria-live="polite"></div>
     <div id="bc-ts"></div>
-    <form id="bc-form"><input id="bc-in" type="text" autocomplete="off" maxlength="1200" placeholder="Ask about ISE, 802.1X, MAB..." aria-label="Your message"><button id="bc-send" type="submit">SEND</button></form>
+    <form id="bc-form"><input id="bc-in" type="text" autocomplete="off" maxlength="1200" placeholder="Ask about ISE, 802.1X, MAB..." aria-label="Your message"><button id="bc-send" type="submit">Send</button></form>
     <div id="bc-note">Answers come from an AI model running on BlueCore's own lab hardware and may be wrong. Please don't paste confidential data.</div>`;
   document.body.append(btn, panel);
 
