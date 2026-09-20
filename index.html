@@ -22,6 +22,7 @@
       <a href="/blog/">Blog</a>
       <!-- /blog:nav -->
       <a id="nav-pulse" href="#threat-pulse" hidden>Threat pulse</a>
+      <a id="nav-lab" href="#live-lab" hidden>Live lab</a>
     </nav>
 
     <section class="hero">
@@ -72,6 +73,32 @@
       </div>
       <p class="pulse-meta">updated <span id="tp-updated">—</span> · data: <a href="https://feodotracker.abuse.ch/" rel="noopener">abuse.ch Feodo Tracker</a> and <a href="https://threatfox.abuse.ch/" rel="noopener">ThreatFox</a> (CC0), <a href="https://check.torproject.org/exit-addresses" rel="noopener">Tor Project</a></p>
     </section>
+
+    <section class="section" id="live-lab" hidden aria-live="polite">
+      <h2>Live lab</h2>
+      <p class="pulse-intro">A running Cisco ISE from the BlueCore lab, open for a read-only look. This section only appears while the lab is up.</p>
+      <div class="grid">
+        <article class="card" id="ll-ise">
+          <h3>Cisco ISE 3.5</h3>
+          <p class="stat" data-f="ise.label">—</p>
+          <p class="stat-sub">standalone policy node, lab-signed PKI</p>
+          <p class="card-note">Read-only login, shared on request. Opens in a new tab.</p>
+          <p class="more-link"><a data-href href="#live-lab">Open the ISE console &gt;</a></p>
+        </article>
+        <article class="card" id="ll-traffic">
+          <h3>Live traffic</h3>
+          <p class="stat">every 2 min</p>
+          <p class="stat-sub">PAP, MAB and EAP-TLS from the lab test host</p>
+          <p class="card-note">Accepts and rejects on purpose: an unknown MAC and a revoked certificate are part of every cycle. Watch them under Operations › RADIUS › Live Logs.</p>
+        </article>
+        <article class="card" id="ll-behind">
+          <h3>Behind it</h3>
+          <p class="stat">no hardware</p>
+          <p class="stat-sub">eapol_test and radclient are the only clients</p>
+          <p class="card-note">Lab CA with OCSP checked fail-closed, an external MySQL endpoint store for MAB, and the policy described in the posts above.</p>
+        </article>
+      </div>
+    </section>
   </main>
 
   <footer>
@@ -80,5 +107,6 @@
 
 <script src="/chat.js" defer></script>
 <script src="/intel.js" defer></script>
+<script src="/lab.js" defer></script>
 </body>
 </html>

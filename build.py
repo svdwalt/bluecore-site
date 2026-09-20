@@ -31,7 +31,7 @@ SITE_URL = 'https://bluecore.joburg'
 LATEST_COUNT = 3
 PREVIEW_DIR = ROOT / '_preview'
 # Files and folders copied into _preview/ so the preview is a complete site.
-PREVIEW_COPY = ['index.html', 'site.css', 'chat.js', 'intel.js', 'favicon.svg', 'robots.txt', 'assets']
+PREVIEW_COPY = ['index.html', 'site.css', 'chat.js', 'intel.js', 'lab.js', 'favicon.svg', 'robots.txt', 'assets']
 
 # Pages link /site.css?v=<content hash>. GitHub Pages lets browsers cache CSS for 10 minutes,
 # so without the hash a fresh page can arrive with stale styles after a deploy.
