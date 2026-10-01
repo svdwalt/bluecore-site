@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlueCore — network access, identity and policy</title>
+<meta name="description" content="BlueCore designs and validates network access control: Cisco ISE, RADIUS, 802.1X, EAP-TLS and MAB. Johannesburg, South Africa.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta property="og:title" content="BlueCore">
+<meta property="og:description" content="Network access, identity and policy. Cisco ISE, RADIUS, 802.1X, EAP-TLS and MAB — designed, tested, documented.">
+<meta property="og:url" content="https://bluecore.joburg/">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/site.css?v=1449f8e14a">
+<link rel="alternate" type="application/rss+xml" title="BlueCore blog" href="/blog/feed.xml">
+</head>
+<body>
+  <main>
+    <nav class="topnav" aria-label="Site">
+      <!-- blog:nav -->
+      <a href="/blog/">Blog</a>
+      <!-- /blog:nav -->
+      <a id="nav-pulse" href="#threat-pulse" hidden>Threat pulse</a>
+      <a id="nav-lab" href="#live-lab" hidden>Live lab</a>
+    </nav>
+
+    <section class="hero">
+      <h1 class="wordmark">BLUECORE</h1>
+      <p class="tagline">Network access. Identity. Policy.</p>
+      <p class="hero-sub">Who gets onto the network, how they prove it, and what policy they land in.</p>
+    </section>
+
+    <!-- blog:latest -->
+    <section class="section" id="latest">
+      <h2>Latest posts</h2>
+      <ul class="post-list"><li class="post-item"><p class="post-meta"><time datetime="2026-09-15">15 Sep 2026</time> · 15 min read</p><h3><a href="/blog/ise-eap-tls-without-hardware/">EAP-TLS on Cisco ISE 3.5: what the defaults let through, and how we proved it without a single switch</a></h3><p>A revoked certificate got full access, a certificate with no clientAuth was accepted, and a dead OCSP responder went unnoticed. All measured on ISE 3.5 with openssl, eapol_test and radclient, and no network hardware at all.</p></li><li class="post-item"><p class="post-meta"><time datetime="2026-09-15">15 Sep 2026</time> · 7 min read</p><h3><a href="/blog/ise-api-coverage/">How much of Cisco ISE 3.5 can you actually automate through the API?</a></h3><p>We built an 802.1X and MAB policy on ISE 3.5 API-first and measured where the API stops. More of it is reachable than we expected, and the gaps are not where the documentation suggests.</p></li></ul>
+      <p class="more-link"><a href="/blog/">All posts &gt;</a></p>
+    </section>
+    <!-- /blog:latest -->
+
+    <section class="section" id="threat-pulse" hidden aria-live="polite">
+      <h2>Threat pulse</h2>
+      <p class="pulse-intro">Live from BlueCore's lab threat-intel service. Indicators are defanged.</p>
+      <div class="grid">
+        <article class="card" id="tp-feodo">
+          <h3>Botnet C2 servers</h3>
+          <p class="stat" data-f="feodo.total">—</p>
+          <p class="stat-sub">tracked, last 30 days · <span data-f="feodo.online">—</span> online</p>
+          <ul class="kv" data-list="feodo.by_malware"></ul>
+        </article>
+        <article class="card" id="tp-threatfox">
+          <h3>ThreatFox IOCs</h3>
+          <p class="stat" data-f="threatfox.total">—</p>
+          <p class="stat-sub" id="tp-threatfox-sub">reported, last 24 h</p>
+          <ul class="kv" data-list="threatfox.by_malware"></ul>
+        </article>
+        <article class="card" id="tp-tor">
+          <h3>Tor exit nodes</h3>
+          <p class="stat" data-f="torexit.total">—</p>
+          <p class="stat-sub">currently listed</p>
+          <p class="card-note">Exit nodes are not malicious by themselves; they are context for access decisions.</p>
+        </article>
+      </div>
+      <div class="panel pulse-newest" id="tp-newest">
+        <h3>Newest C2 servers</h3>
+        <div class="pulse-scroll">
+          <table class="pulse-table">
+            <thead><tr><th>IP</th><th>Family</th><th>Country</th><th>First seen</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <p class="pulse-meta">updated <span id="tp-updated">—</span> · data: <a href="https://feodotracker.abuse.ch/" rel="noopener">abuse.ch Feodo Tracker</a> and <a href="https://threatfox.abuse.ch/" rel="noopener">ThreatFox</a> (CC0), <a href="https://check.torproject.org/exit-addresses" rel="noopener">Tor Project</a></p>
+    </section>
+
+    <section class="section" id="live-lab" hidden aria-live="polite">
+      <h2>Live lab</h2>
+      <p class="pulse-intro">A running Cisco ISE from the BlueCore lab, open for a read-only look. This section only appears while the lab is up.</p>
+      <div class="grid">
+        <article class="card" id="ll-ise">
+          <h3>Cisco ISE 3.5</h3>
+          <p class="stat" data-f="ise.label">—</p>
+          <p class="stat-sub">standalone policy node, lab-signed PKI</p>
+          <p class="card-note">Read-only login, shared on request. Opens in a new tab.</p>
+          <p class="more-link"><a data-href href="#live-lab">Open the ISE console &gt;</a></p>
+        </article>
+        <article class="card" id="ll-traffic">
+          <h3>Live traffic</h3>
+          <p class="stat">every 2 min</p>
+          <p class="stat-sub">PAP, MAB and EAP-TLS from the lab test host</p>
+          <p class="card-note">Accepts and rejects on purpose: an unknown MAC and a revoked certificate are part of every cycle. Watch them under Operations › RADIUS › Live Logs.</p>
+        </article>
+        <article class="card" id="ll-behind">
+          <h3>Behind it</h3>
+          <p class="stat">no hardware</p>
+          <p class="stat-sub">eapol_test and radclient are the only clients</p>
+          <p class="card-note">Lab CA with OCSP checked fail-closed, an external MySQL endpoint store for MAB, and the policy described in the posts above.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    BlueCore, Johannesburg. 2026.
+  </footer>
+
+<script src="/chat.js" defer></script>
+<script src="/intel.js" defer></script>
+<script src="/lab.js" defer></script>
+</body>
+</html>

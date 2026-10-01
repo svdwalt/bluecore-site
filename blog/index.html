@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog | BlueCore</title>
+<meta name="description" content="Notes from the BlueCore lab on network access control, identity and policy.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="canonical" href="https://bluecore.joburg/blog/">
+<link rel="alternate" type="application/rss+xml" title="BlueCore blog" href="/blog/feed.xml">
+<meta property="og:title" content="Blog | BlueCore">
+<meta property="og:description" content="Notes from the BlueCore lab on network access control, identity and policy.">
+<meta property="og:url" content="https://bluecore.joburg/blog/">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/site.css?v=1449f8e14a">
+</head>
+<body class="blog">
+  <main>
+    <nav class="topnav" aria-label="Site">
+      <a class="topnav-home" href="/">BLUECORE</a>
+      <a href="/blog/" aria-current="page">Blog</a>
+    </nav>
+    <header class="blog-head">
+      <h1>Blog</h1>
+      <p class="lede">Notes from the BlueCore lab: network access control, identity and policy, measured rather than assumed.</p>
+    </header>
+    <div class="blog-list">
+      <ul class="post-list"><li class="post-item"><p class="post-meta"><time datetime="2026-09-15">15 Sep 2026</time> · 15 min read</p><h2><a href="/blog/ise-eap-tls-without-hardware/">EAP-TLS on Cisco ISE 3.5: what the defaults let through, and how we proved it without a single switch</a></h2><p>A revoked certificate got full access, a certificate with no clientAuth was accepted, and a dead OCSP responder went unnoticed. All measured on ISE 3.5 with openssl, eapol_test and radclient, and no network hardware at all.</p></li><li class="post-item"><p class="post-meta"><time datetime="2026-09-15">15 Sep 2026</time> · 7 min read</p><h2><a href="/blog/ise-api-coverage/">How much of Cisco ISE 3.5 can you actually automate through the API?</a></h2><p>We built an 802.1X and MAB policy on ISE 3.5 API-first and measured where the API stops. More of it is reachable than we expected, and the gaps are not where the documentation suggests.</p></li></ul>
+      <p class="more-link"><a href="/blog/feed.xml">RSS feed</a></p>
+    </div>
+  </main>
+
+  <footer>
+    BlueCore, Johannesburg. 2026.
+  </footer>
+
+<script src="/chat.js" defer></script>
+</body>
+</html>
