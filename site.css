@@ -54,7 +54,7 @@ h1, h2, h3, h4 {
 }
 
 /* Boxes drawn by hand: firm ink line, a fainter second pass just outside it. */
-.card, .post-item, .panel {
+.post-item {
   border: 2px solid var(--ink);
   border-radius: var(--wobble-a);
   box-shadow: 2px 3px 0 -1px rgba(43, 43, 43, 0.28);
@@ -115,91 +115,6 @@ main { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
 }
 .section h3 { font-size: 1.35rem; color: var(--amber); }
 
-.panel {
-  background: var(--paper);
-  padding: 1.4rem 1.6rem;
-}
-
-/* ---------- Card grid ---------- */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.2rem;
-}
-@media (max-width: 860px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
-
-.card {
-  padding: 1.2rem 1.3rem 1.4rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  background: var(--blue-bg);
-}
-.grid .card:nth-child(2) { background: var(--green-bg); }
-.grid .card:nth-child(3) { background: var(--purple-bg); }
-.card h3 { font-size: 1.35rem; color: var(--ink); }
-.card p { color: var(--ink-soft); font-size: 0.95rem; line-height: 1.5; }
-
-/* ---------- Threat pulse ---------- */
-#threat-pulse[hidden], #threat-pulse [hidden] { display: none; }
-.pulse-intro { max-width: 68ch; color: var(--ink-soft); margin-bottom: 1.4rem; }
-/* .card .x outranks the generic .card p rule above */
-.card .stat {
-  font-family: var(--hand);
-  font-size: clamp(2.2rem, 5vw, 3rem);
-  color: var(--ink);
-  line-height: 1;
-  margin: 0.2rem 0;
-}
-.card .stat-sub { color: var(--ink-soft); font-size: 0.9rem; }
-.card .card-note { color: var(--ink-soft); font-size: 0.88rem; font-style: italic; }
-.kv {
-  list-style: none;
-  font-size: 0.9rem;
-  color: var(--ink-soft);
-  margin-top: 0.2rem;
-  font-variant-numeric: tabular-nums;
-}
-.kv li {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.3rem 0;
-  border-bottom: 1px dashed rgba(43, 43, 43, 0.3);
-}
-.kv li:last-child { border-bottom: 0; }
-.kv .kv-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.kv .kv-count { color: var(--ink); flex: none; }
-.pulse-newest { margin-top: 1.2rem; }
-.pulse-newest h3 { font-size: 1.35rem; color: var(--amber); margin-bottom: 0.8rem; }
-.pulse-scroll { overflow-x: auto; max-width: 100%; }
-.pulse-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  white-space: nowrap;
-  font-size: 0.95rem;
-  font-variant-numeric: tabular-nums;
-}
-.pulse-table th {
-  font-weight: 600;
-  padding: 0.5rem 0.7rem;
-  background: var(--paper-2);
-  border-bottom: 2px solid var(--ink-soft);
-}
-.pulse-table td {
-  padding: 0.5rem 0.7rem;
-  border-bottom: 1px solid var(--rule);
-  color: var(--ink);
-}
-.pulse-table td:first-child { font-family: var(--mono); font-size: 0.88em; }
-.pulse-meta { margin-top: 1rem; font-size: 0.9rem; color: var(--ink-soft); }
-.pulse-meta a { color: var(--blue); }
-@media (max-width: 560px) {
-  .pulse-table th, .pulse-table td { padding: 0.4rem 0.5rem; }
-  .pulse-newest { padding: 1.2rem 1rem; }
-}
 
 /* ---------- Footer ---------- */
 footer {
@@ -349,5 +264,5 @@ footer {
 
 @media (max-width: 640px) {
   body { font-size: 16px; }
-  .card, .post-item { padding-inline: 1rem; }
+  .post-item { padding-inline: 1rem; }
 }
