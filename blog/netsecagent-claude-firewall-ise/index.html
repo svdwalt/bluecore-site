@@ -38,8 +38,8 @@
 <h2 id="the-short-answer">The short answer</h2>
 <p>It works better than we expected for diagnosis, and well enough for changes that we now use it instead of the web interfaces for most lab work. The cost is small: 22 sessions came to 12.66 US dollars in API use, with a median of about 0.20 per session and 4.55 for the most expensive one.</p>
 <p>Three things made the difference, and none of them is the model:</p>
-<ol><li>One thin REST tool per product, not a function per feature.</li><li>A notes file that holds only calls we had run on the real device.</li><li>A fixed ending to every answer: what was changed, what was verified, and what is left.</li></ol>
-<p>It is not autonomous. One integration step had no API at all, and the one long task we gave it needed a person twice and about an hour of that person&#x27;s time.</p>
+<ol><li>One thin REST tool per product, not a function per feature.</li><li>A notes file that holds only calls we had run on the real device.</li><li>A fixed ending to every answer, in three lines: Changed, Verified and Notes.</li></ol>
+<p>It is not autonomous. The one long task we gave it needed a person three times, once for a step that has no API at all, and about an hour of that person&#x27;s time.</p>
 <h2 id="how-it-is-built">How it is built</h2>
 <p>The agent is a loop from the Claude Agent SDK running Claude Opus 5.5, behind a small web page. Every tool call passes two hooks first: one writes it to an audit log, the other decides whether it may run.</p>
 <p><img src="/assets/blog/netsecagent-flow.png" alt="A request goes from the web page to the agent loop, through the audit and guard hooks, to one tool per product and on to the devices" loading="lazy"></p>
