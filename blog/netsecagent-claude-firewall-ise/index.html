@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetSecAgent: letting Claude operate the lab firewalls and ISE, and what it cost | BlueCore</title>
+<meta name="description" content="We gave a Claude agent API access to a Cisco FMC with three firewalls, a FortiFirewall and Cisco ISE, then asked it for real work in plain English. 22 sessions, 300 tool calls and 12.66 US dollars later, this is what worked, what did not, and what we would change before a customer network.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="canonical" href="https://bluecore.joburg/blog/netsecagent-claude-firewall-ise/">
+<link rel="alternate" type="application/rss+xml" title="BlueCore blog" href="/blog/feed.xml">
+<meta property="og:title" content="NetSecAgent: letting Claude operate the lab firewalls and ISE, and what it cost | BlueCore">
+<meta property="og:description" content="We gave a Claude agent API access to a Cisco FMC with three firewalls, a FortiFirewall and Cisco ISE, then asked it for real work in plain English. 22 sessions, 300 tool calls and 12.66 US dollars later, this is what worked, what did not, and what we would change before a customer network.">
+<meta property="og:url" content="https://bluecore.joburg/blog/netsecagent-claude-firewall-ise/">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2026-11-24">
+<meta property="og:image" content="https://bluecore.joburg/assets/blog/netsecagent-cover.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/site.css?v=a4471fb251">
+</head>
+<body class="blog">
+  <main>
+    <nav class="topnav" aria-label="Site">
+      <a class="topnav-home" href="/">BLUECORE</a>
+      <a href="/blog/">Blog</a>
+    </nav>
+    <article>
+      <header class="blog-head">
+        <h1>NetSecAgent: letting Claude operate the lab firewalls and ISE, and what it cost</h1>
+        <p class="post-meta"><time datetime="2026-11-24">24 Nov 2026</time> · 11 min read</p>
+      </header>
+      <figure class="post-cover"><img src="/assets/blog/netsecagent-cover.png" alt="NetSecAgent: letting Claude operate the lab firewalls and ISE, and what it cost" width="1200" height="630"></figure>
+      <div class="prose">
+<p>Our earlier posts measured how far the Cisco ISE API reaches. The next question was the obvious one: if nearly everything is reachable through an API, can a language model do the work, instead of a person writing curl commands?</p>
+<p>We built an agent to find out. It is called NetSecAgent. You type a request in plain English, such as &quot;why can this PC not reach that server&quot; or &quot;block DNS to 8.8.8.8 from the PC behind the second firewall and prove it&quot;. The agent does the work on the devices and reports what it changed and how it checked.</p>
+<p>Everything below was measured in the BlueCore lab between 13 and 20 November 2026. The devices were a <strong>Cisco Secure Firewall Management Center 10.0.1</strong> managing three <strong>FTD 10.0.0</strong> firewalls, a <strong>FortiFirewall 7.0.15</strong>, and <strong>Cisco ISE 3.5 patch 4</strong>. It is a lab tool. The last section says what would have to change before it goes near a production network.</p>
+<h2 id="the-short-answer">The short answer</h2>
+<p>It works better than we expected for diagnosis, and well enough for changes that we now use it instead of the web interfaces for most lab work. Three things made the difference, and none of them is the model:</p>
+<ol><li>One thin REST tool per product, not a function per feature.</li><li>A notes file that holds only calls we had run on the real device.</li><li>A fixed ending to every answer: what was changed, what was verified, and what is left.</li></ol>
+<p>It is not autonomous. One integration step had no API at all and needed a person, and the one long task we gave it needed a person twice.</p>
+<h2 id="how-it-is-built">How it is built</h2>
+<p>The agent is a loop from the Claude Agent SDK running Claude Opus 5.5, behind a small web page. Every tool call passes two hooks first: one writes it to an audit log, the other decides whether it may run.</p>
+<div class="table-wrap"><table><thead><tr><th>Tool</th><th>What it does</th></tr></thead><tbody><tr><td>FMC REST</td><td>One authenticated call to the FMC. All Cisco firewall configuration goes through this.</td></tr><tr><td>Firewall CLI</td><td>Show commands, ping, packet tracer and captures on one firewall over SSH.</td></tr><tr><td>ISE REST and CLI</td><td>ERS and OpenAPI calls, and the ISE command line.</td></tr><tr><td>FortiOS REST and CLI</td><td>The same pair for the FortiFirewall.</td></tr><tr><td>Client PC</td><td>Shell commands on a Linux PC behind each firewall, so test traffic really crosses it.</td></tr><tr><td>Shell</td><td>curl, openssl and ssh for anything the tools do not cover.</td></tr></tbody></table></div>
+<h3 id="a-thin-tool-and-a-notes-file">A thin tool and a notes file</h3>
+<p>The FMC tool takes a method, a path, a body and parameters, and nothing else. There is no &quot;create rule&quot; function and no &quot;add NAT&quot; function. The model builds each request itself.</p>
+<p>What it builds them from is a notes file. The file holds read calls, request bodies and procedures that we ran against this FMC, each with the date. Next to it sits a list of all 779 API paths, taken from the FMC&#x27;s own API description. The model searches that list when it needs a path the notes do not cover.</p>
+<p>This kept the tool at 175 lines. Supporting a new FMC feature means adding a paragraph of notes, not code. The rule for the notes is strict: only what was measured. While we built the lab, guessed request bodies were the main source of failed runs.</p>
+<h3 id="the-tool-handles-what-the-model-should-not-think-about">The tool handles what the model should not think about</h3>
+<ul><li><strong>Login.</strong> The tool gets the token, keeps it, and logs in again once if a call answers 401.</li><li><strong>TLS.</strong> The FMC&#x27;s certificate is self-signed, so the tool trusts that exact certificate and no other. Without it the tool refuses to send the login.</li><li><strong>Lockout.</strong> A rejected login means the password is wrong. The tool then refuses every later call to that device until it is restarted, so the agent cannot lock an account by retrying. We learned that lesson the hard way on ISE, as the API coverage post describes.</li><li><strong>Size.</strong> Large replies are cut with a note, so one long list cannot fill the model&#x27;s context.</li></ul>
+<h3 id="evidence-not-opinion">Evidence, not opinion</h3>
+<p>The agent is told to prove what it says. On a firewall that means packet tracer, which names the exact rule that dropped a flow, then hit counters, then a real test from the client PC. Asked why a client could not use Telnet while web browsing worked, it answered with this, from the firewall:</p>
+<pre><code>Phase: 4  Type: ACCESS-LIST  Result: DROP
+access-list CSM_FW_ACL_ advanced deny tcp ifc inside any ifc outside any object-group TELNET rule-id 268434436
+access-list CSM_FW_ACL_ remark rule-id 268434436: L4 RULE: lab-deny-telnet
+Drop-reason: (acl-drop) Flow is denied by configured rule</code></pre>
+<p>It then showed which rule the web traffic matched instead. That run made eight tool calls in 28 seconds and cost 0.28 US dollars.</p>
+<h2 id="the-numbers">The numbers</h2>
+<p>These come from the agent&#x27;s own audit database, not from memory.</p>
+<div class="table-wrap"><table><thead><tr><th>Measure</th><th>Value</th></tr></thead><tbody><tr><td>Sessions</td><td>22, of which two were one-line connection checks</td></tr><tr><td>Tool calls</td><td>300</td></tr><tr><td>Tool calls that returned an error</td><td>11</td></tr><tr><td>Requests the agent refused</td><td>1</td></tr><tr><td>Total API cost</td><td>12.66 US dollars</td></tr><tr><td>Median session cost</td><td>about 0.20 US dollars</td></tr><tr><td>Most expensive session</td><td>4.55 US dollars</td></tr></tbody></table></div>
+<p>A sample of single requests:</p>
+<div class="table-wrap"><table><thead><tr><th>Request</th><th>Tool calls</th><th>Cost (USD)</th></tr></thead><tbody><tr><td>What is the bandwidth on the FortiFirewall WAN link?</td><td>4</td><td>0.10</td></tr><tr><td>Is anything waiting to be deployed from the FMC, and to which firewalls?</td><td>5</td><td>0.10</td></tr><tr><td>Forward a WAN port to the client behind the FortiFirewall</td><td>8</td><td>0.16</td></tr><tr><td>Log in to all three firewalls, report version and VPN peers</td><td>6</td><td>0.19</td></tr><tr><td>Why is Telnet blocked while web works? Show the evidence.</td><td>8</td><td>0.28</td></tr><tr><td>Add a rule on the FMC for all three firewalls and deploy it</td><td>14</td><td>0.48</td></tr><tr><td>Is ISE healthy? Node status, version, patch, sessions</td><td>22</td><td>0.51</td></tr><tr><td>Block DNS to 8.8.8.8 from one client, deploy to one firewall, prove it</td><td>25</td><td>0.66</td></tr><tr><td>Set up the pxGrid integration between ISE and the FMC</td><td>92</td><td>4.55</td></tr></tbody></table></div>
+<p>Most read-only questions finish in under a minute; the ISE health check took two. Changes that need a deployment take as long as the FMC takes to deploy, which is between 40 seconds and several minutes, and the agent spends that time waiting and polling.</p>
+<h2 id="the-long-task-pxgrid-between-ise-and-the-fmc">The long task: pxGrid between ISE and the FMC</h2>
+<p>The hardest request was to connect the FMC to ISE over pxGrid, so that the firewalls learn users and security group tags from ISE. It took 92 tool calls over 35 minutes. Ten of the eleven failed tool calls in the whole data set happened here.</p>
+<p>What the agent did by itself:</p>
+<ul><li>Enabled the pxGrid service on the ISE node and checked the port answered.</li><li>Worked out which CA chains the FMC had to trust by asking the ISE ports directly with OpenSSL.</li><li>Created the FMC&#x27;s key and certificate request, and loaded the certificates into the FMC.</li><li>Tested the client certificate against ISE <strong>before</strong> touching the FMC, by registering a throw-away pxGrid client and then deleting it.</li><li>Read the ISE pxGrid log to find out why its first certificate was rejected.</li></ul>
+<p>Where it needed a person:</p>
+<ul><li><strong>Its first certificate was self-signed, and ISE rejected it.</strong> The agent found the reason in the log (<code>Validation error: self signed certificate</code>) and tried twice more, once with the CA flag set, before it stopped. The certificate had to be signed by a CA that ISE trusts, which meant our lab CA and a person.</li><li><strong>The FMC has no API call for its ISE connection form.</strong> The agent prepared every value and handed over a table. A person typed it in.</li><li><strong>DNS.</strong> The FMC&#x27;s connection test then failed on name resolution, twice, for two different reasons. The second one was a DNS server answering with a lifetime of zero, which the FMC resolves once and then reports as &quot;Host not found&quot;. That was found with a packet capture and a person, not by the agent.</li></ul>
+<p>The result is a runbook written for an agent, with every call tested, which the next run can follow without the false start. That is the pattern we expect to keep: the first run of a new kind of task is slow and supervised, and what it leaves behind is the notes that make the second run cheap.</p>
+<h2 id="what-stops-it-doing-damage">What stops it doing damage</h2>
+<div class="table-wrap"><table><thead><tr><th>Control</th><th>What it does</th></tr></thead><tbody><tr><td>Guard hook</td><td>Refuses calls to machines outside the lab, reboots and shutdowns, and changes to accounts, software updates, backups and the management path</td></tr><tr><td>Lockout latch</td><td>After one rejected login, no more calls to that device</td></tr><tr><td>Audit log</td><td>Every tool call and the start of its result, with passwords and tokens removed</td></tr><tr><td>Cost caps</td><td>8 US dollars per request and 40 per day</td></tr><tr><td>Fixed report</td><td>Every answer ends with Changed, Verified and Notes</td></tr></tbody></table></div>
+<p>The one refused request was a test. We asked the agent to shut down a virtual machine that belongs to a different lab. It answered that the address was not part of the firewall lab, changed nothing, sent no traffic to it, and said who should do it instead. That cost 0.02 US dollars.</p>
+<p>The guard is a deny-list that matches text, and the model has a free shell. It catches the obvious. It is not a security boundary, and we do not treat it as one.</p>
+<p>The agent was also careful in ways we did not write rules for. When a curl command failed certificate verification against the FMC, it wrote: &quot;I&#x27;m not going to turn verification off&quot;, and went back to the tool that had the pinned certificate.</p>
+<h2 id="claude-with-defense-access">Claude with defense access</h2>
+<p>Firewall and identity work is dual-use by nature. The same requests that fix a network could describe an attack on one: capture packets on an interface, read the rule that blocks a flow and change it, handle private keys, open a shell on a firewall, probe an address from outside. A general-purpose model may reasonably hesitate at some of that.</p>
+<p>Our Anthropic API account has cybersecurity defense access, and the agent&#x27;s key is under it. With that in place, across the 22 sessions and 300 tool calls above, the model did not decline a single request on safety grounds. The only refusal was the one our own guard is there to produce.</p>
+<p>We have not run the same requests on an account without that access, so we cannot say how much of this result the access is responsible for. What we can say is that with it, the model was never the obstacle. The limits we hit were the ones in the products: a form with no API, a certificate rule, a DNS cache.</p>
+<h2 id="what-does-not-work-yet">What does not work yet</h2>
+<ul><li><strong>Long waits.</strong> A deployment that takes minutes is a poor fit for a chat page. We interrupted two runs while they were waiting, and each time the agent reported honestly that it had started the deployment and had not confirmed the result.</li><li><strong>Tasks that span products and people.</strong> pxGrid needed a CA, a DNS server and a web form. The agent did its part and handed over cleanly, but a person still had to hold the whole picture.</li><li><strong>First attempts at something new.</strong> Without notes for a task, the agent guesses like anyone else. The self-signed certificate was a reasonable guess and a wrong one.</li><li><strong>The guard.</strong> A deny-list is acceptable in a lab and nowhere else.</li></ul>
+<h2 id="before-this-goes-near-production">Before this goes near production</h2>
+<ol><li><strong>Approval for writes.</strong> The lab agent changes configuration without asking. On a real network, a change and its deployment should be proposed, approved by a person, and only then run.</li><li><strong>Read-only accounts for read tasks.</strong> Most of the useful requests were questions. They need a read-only role, not the administrator.</li><li><strong>An allow-list in place of the guard.</strong> Named operations with fixed shapes, not a free REST call and a free shell.</li><li><strong>One API user per integration.</strong> On the FMC, a second login with the same user ends the first one&#x27;s token.</li><li><strong>Notes per software version.</strong> FMC paths differ between versions. Take the path list from the customer&#x27;s own FMC.</li></ol>
+<h2 id="what-we-would-tell-someone-starting-out">What we would tell someone starting out</h2>
+<ol><li>Build one generic tool per product and put the knowledge in a notes file that people can read and review.</li><li>Write down only what you have run. A guessed request body costs more than a missing one.</li><li>Make the agent prove its answer with the device&#x27;s own evidence, and make every answer end the same way.</li><li>Put the lockout latch and the audit log in before anything else. Both are small and neither depends on the model.</li><li>Expect the first run of a new task to need you. Keep what it learned, so the second run does not.</li></ol>
+      </div>
+    </article>
+    <p class="post-foot"><a href="/blog/">&lt; All posts</a><a href="/blog/feed.xml">RSS feed</a></p>
+  </main>
+
+  <footer>
+    BlueCore, Johannesburg. 2026.
+  </footer>
+
+</body>
+</html>

@@ -6,7 +6,14 @@
     <atom:link href="https://bluecore.joburg/blog/feed.xml" rel="self" type="application/rss+xml"/>
     <description>Notes from the BlueCore lab on network access control, identity and policy.</description>
     <language>en-za</language>
-    <lastBuildDate>Tue, 15 Sep 2026 06:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 24 Nov 2026 06:00:00 +0000</lastBuildDate>
+    <item>
+      <title>NetSecAgent: letting Claude operate the lab firewalls and ISE, and what it cost</title>
+      <link>https://bluecore.joburg/blog/netsecagent-claude-firewall-ise/</link>
+      <guid isPermaLink="true">https://bluecore.joburg/blog/netsecagent-claude-firewall-ise/</guid>
+      <pubDate>Tue, 24 Nov 2026 06:00:00 +0000</pubDate>
+      <description>We gave a Claude agent API access to a Cisco FMC with three firewalls, a FortiFirewall and Cisco ISE, then asked it for real work in plain English. 22 sessions, 300 tool calls and 12.66 US dollars later, this is what worked, what did not, and what we would change before a customer network.</description>
+    </item>
     <item>
       <title>EAP-TLS on Cisco ISE 3.5: what the defaults let through, and how we proved it without a single switch</title>
       <link>https://bluecore.joburg/blog/ise-eap-tls-without-hardware/</link>
