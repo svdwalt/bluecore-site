@@ -28,7 +28,7 @@
     <article>
       <header class="blog-head">
         <h1>NetSecAgent: letting Claude operate the lab firewalls and ISE, and what it cost</h1>
-        <p class="post-meta"><time datetime="2026-11-24">24 Nov 2026</time> · 12 min read</p>
+        <p class="post-meta"><time datetime="2026-11-24">24 Nov 2026</time> · 13 min read</p>
       </header>
       <figure class="post-cover"><img src="/assets/blog/netsecagent-cover.png" alt="NetSecAgent: letting Claude operate the lab firewalls and ISE, and what it cost" width="1200" height="630"></figure>
       <div class="prose">
@@ -47,6 +47,7 @@
 <div class="table-wrap"><table><thead><tr><th>Tool</th><th>What it does</th></tr></thead><tbody><tr><td>FMC REST</td><td>One authenticated call to the FMC. All Cisco firewall configuration goes through this.</td></tr><tr><td>Firewall CLI</td><td>Show commands, ping, packet tracer and captures on one firewall over SSH.</td></tr><tr><td>ISE REST and CLI</td><td>ERS and OpenAPI calls, and the ISE command line.</td></tr><tr><td>FortiOS REST and CLI</td><td>The same pair for the FortiFirewall.</td></tr><tr><td>Client PC</td><td>Shell commands on a Linux PC behind each firewall, so test traffic really crosses it. These are disposable lab machines built for testing; nobody works on them.</td></tr><tr><td>Shell</td><td>curl, openssl and ssh for anything the tools do not cover.</td></tr></tbody></table></div>
 <h3 id="a-thin-tool-and-a-notes-file">A thin tool and a notes file</h3>
 <p>The FMC tool takes a method, a path, a body and parameters, and nothing else. There is no &quot;create rule&quot; function and no &quot;add NAT&quot; function, so the model builds each request itself.</p>
+<p><img src="/assets/blog/netsecagent-thin-tool.png" alt="Left, a tool with one function per feature: the agent wants a packet trace, the tool has no function for it, so the FMC is never asked. Right, one thin REST tool: the agent writes the packet tracer call itself from the notes file and the path list, and the FMC answers" loading="lazy"></p>
 <p>What it builds them from is a notes file. The file holds read calls, request bodies and procedures that we ran against this FMC, each with the date. Next to it sits a list of all 779 API paths, taken from the FMC&#x27;s own API description. The model searches that list when it needs a path the notes do not cover.</p>
 <p>Here is one entry as the agent reads it, with the client address replaced and the last sentence shortened:</p>
 <pre><code>## Verified: why is this traffic allowed or blocked (packet tracer)
